@@ -4,9 +4,8 @@
   "scripts": {
     "ts-node": "ts-node ./index.ts",
     "build": "tsc",
-    "nodemon": "nodemon",
-    "dev": "concurrently  \" npm run nodemon\"",
-    "start": "nodemon --watch"
+    "start": "nodemon --watch ./src --ext ts --exec ts-node ./src/index.ts --ignore ./src/**/*.spec.ts",
+    "start:build":"tsc&&nodemon ./build/index.js"
   },
   "keywords": [],
   "author": "",
