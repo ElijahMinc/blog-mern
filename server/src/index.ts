@@ -4,10 +4,11 @@ import fileUpload from 'express-fileupload'
 import authRouter from './routes/auth.router';
 import userRouter from './routes/user.router';
 import postRouter from './routes/post.router';
+import commentRouter from './routes/comments.router';
+
 import cors from 'cors'
 
 import 'dotenv/config'
-import commentRouter from './routes/comments.router';
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(userRouter)
 app.use(postRouter)
 app.use(commentRouter)
 
+
+
+console.log('JUST BYE!!!')
 const start = async () => {
    try {
 
