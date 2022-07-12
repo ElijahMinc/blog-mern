@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Redirect, Route, Switch } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
-import { Layout } from '../../pages/Layout'
-import { refreshAuth, selectUser, setToken, userThunk } from '../../redux'
-import { AppDispatch } from '../../redux/configureStore'
-import { privateRoutes, publicRoutes } from '../../routes/routes'
-import { LocalStorageKeys, LocalStorageService } from '../../service/LocalStorageService'
+import { useAuth } from '../../../hooks/useAuth'
+import { Layout } from '../../../pages/Layout'
+import { refreshAuth, selectUser, setToken, userThunk } from '../../../redux'
+import { AppDispatch } from '../../../redux/configureStore'
+import { privateRoutes, publicRoutes } from '../../../routes/routes'
+import { LocalStorageKeys, LocalStorageService } from '../../../service/LocalStorageService'
 
 interface AppRouterProps {
 

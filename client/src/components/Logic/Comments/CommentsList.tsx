@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material'
 import React from 'react'
-import { Comment } from '../../redux'
+import { Comment } from '../../../redux'
 import { CommentsItem } from './CommentsItem'
 
 interface CommentsListProps {
@@ -14,7 +14,9 @@ export const CommentsList: React.FC<CommentsListProps> = ({ comments }) => {
          marginBottom: '20px'
       }} flexDirection="column">
          {!comments.length 
-            ? <h2>Комментариев к этому посту нет</h2> 
+            ? <h2 style={{
+               marginLeft: '20px'
+            }}>Комментариев к этому посту нет</h2> 
             : (
              comments.map(({_id, ...rest}) => (
                <CommentsItem 

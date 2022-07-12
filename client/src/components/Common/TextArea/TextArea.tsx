@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Controller, Path, PathValue, UseControllerProps, UseFormReturn } from 'react-hook-form';
-import { Typography } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 
 import { EditorState, ContentState, convertFromHTML, convertToRaw } from 'draft-js'
 import { convertToHTML } from 'draft-convert';
@@ -9,8 +9,9 @@ import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
 import 'draft-js/dist/Draft.css';
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-
+import { makeStyles } from '@mui/styles'
 import styles from './TextArea.module.css'
+
 
 interface TextAreaProps<T> {
    form: UseFormReturn<T>
@@ -20,9 +21,24 @@ interface TextAreaProps<T> {
    handleChange?: (value: string) => void
 }
 
+const useStyles = makeStyles({
+   textAreaWrapper: {
+      "& .rdw-editor-toolbar": {
+         background: '#121212',
+         border: 'none',
+         '& .rdw-block-wrapper': {
+            color:'#121212',
+          
+         },
+      }
+   }
+})
+
 export function TextArea<T>({ form, name, rules, defaultValue, handleChange, ...props }: TextAreaProps<T> & EditorProps){
    const { setValue } = form
-
+   const styles = useStyles()
+   const theme = useTheme()
+   
    const contentBlock = htmlToDraft(defaultValue as string);
    const [editorState, setEditorState] = useState(
       contentBlock ? 
@@ -46,6 +62,7 @@ export function TextArea<T>({ form, name, rules, defaultValue, handleChange, ...
     }
 
     const toolbarOptions = useMemo(() => ({
+      
       options: ['inline', 'blockType',  'list', 'emoji', ],
       inline: {
          options: ['bold', 'italic', 'underline', 'strikethrough', 'monospace']
@@ -54,10 +71,12 @@ export function TextArea<T>({ form, name, rules, defaultValue, handleChange, ...
          options: ['unordered', 'ordered', ],
        },
    }), [])
-   console.log(convertedContent)
+
 
    return (
       <Editor 
+         // toolbarClassName={theme.palette.mode === 'dark' ? styles.textAreaToobar : ''}
+         wrapperClassName={theme.palette.mode === 'dark' ? styles.textAreaWrapper : ''}
          toolbar={toolbarOptions}
          initialContentState={convertedContent}
          editorState={editorState}

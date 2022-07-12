@@ -1,11 +1,12 @@
 import { Action, AnyAction, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { FormDefaultValuesPost } from "../../components/Posts/Post.interface"
+import { FormDefaultValuesPost } from "../../components/Logic/Posts/Post.interface"
 import { TabValue } from "../../pages/Home"
 import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
 import { BaseInitState } from "../../types/global.types"
 import { RootState } from "../configureStore"
+import { setToast } from "../Toast"
 
 
 
@@ -37,7 +38,7 @@ const initialState: BaseInitState<InitialStateComments> = {
 export const getCommentsThunk = createAsyncThunk<Comment[], undefined, {rejectValue: string }>('comments/get', async (_ = undefined, { dispatch, rejectWithValue }) => {
     try {
 
-      let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/comment`
+      let url = `${process.env.REACT_APP_API_URL}/comment`
 
       const request = await axios.get(url, {
          headers: {
@@ -45,6 +46,7 @@ export const getCommentsThunk = createAsyncThunk<Comment[], undefined, {rejectVa
           }
       })
       const response = await request.data
+
 
       return response
     } catch (err) {
@@ -59,7 +61,7 @@ export const getCommentsThunk = createAsyncThunk<Comment[], undefined, {rejectVa
 export const getCommentsByPostIdThunk = createAsyncThunk<Comment[], string, {rejectValue: string }>('comments/get', async (postId, { dispatch, rejectWithValue }) => {
   try {
 
-    let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/comment/${postId}`
+    let url = `${process.env.REACT_APP_API_URL}/comment/${postId}`
 
     const request = await axios.get(url, {
        headers: {
@@ -81,7 +83,7 @@ export const getCommentsByPostIdThunk = createAsyncThunk<Comment[], string, {rej
 export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {rejectValue: string }>('comment/create', async (comment, { dispatch, rejectWithValue }) => {
   try {
 
-    let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/comment`
+    let url = `${process.env.REACT_APP_API_URL}/comment`
 
     const formData = new FormData()
 
@@ -95,12 +97,14 @@ export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {reject
         }
     })
     const response = await request.data
+    dispatch(setToast({title: 'Comment was created! ^^', status: 'success'}))
 
     return response
   } catch (err) {
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+    dispatch(setToast({title: error, status: 'error'}))
 
     return rejectWithValue(error)
   }

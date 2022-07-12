@@ -1,22 +1,21 @@
 import {Button, Card, CardActions, CardContent, CardMedia, Collapse, Grid, TextField, Typography } from '@mui/material'
 import { makeStyles } from '@mui/styles'
 import moment from 'moment'
-import React, { ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPostThunk, editPostThunk, likePostThunk, Post, selectPost, selectUser } from '../../redux'
-import notFoundImage from '../../static/notFoundImage.png'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { createPostThunk, editPostThunk, likePostThunk, Post, selectPost, selectUser } from '../../../redux'
+import notFoundImage from '../../../static/notFoundImage.png'
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ExpandMore, Like } from './PostItem'
 import {  useForm } from 'react-hook-form'
-import { ThemedInput } from '../Common/ThemedInput/ThemedInput'
-import { getFormRules } from '../../utils/formRules'
-import { TextArea } from '../TextArea/TextArea'
+import { ThemedInput } from '../../Common/ThemedInput/ThemedInput'
+import { getFormRules } from '../../../utils/formRules'
+import { TextArea } from '../../Common/TextArea/TextArea'
 import { defaultValuesPost, FormDefaultValuesPost } from './Post.interface'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch } from '../../redux/configureStore'
+import { AppDispatch } from '../../../redux/configureStore'
 import { useHistory } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid';
-import { blue } from '@mui/material/colors'
 import CloseIcon from '@mui/icons-material/Close';
 import { Comments } from '../Comments/Comments'
 
@@ -125,7 +124,6 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
 
    const isLikedStatus = post?.likes?.userIds.indexOf(authUserId) !== -1
 
-   console.log('isLikedStatus', isLikedStatus)
    const [isNewPost] = useState(!post || isEdit) // USE MEMO!
    const [previewImg, setPreview] = useState<string>('')
    
@@ -146,11 +144,11 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
 
    const imageUrl = 
          post?.imageName 
-            ? `http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${post?.imageName}` 
+            ? `${process.env.REACT_APP_API_URL}/upload/${post?.imageName}` 
             : notFoundImage
    const authorImageUrl = 
          post?.userInfo?.avatar 
-               ? `http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${post?.userInfo?.avatar }` 
+               ? `${process.env.REACT_APP_API_URL}/upload/${post?.userInfo?.avatar }` 
                : notFoundImage
 
    const handleLikeClick =  async () =>  {
@@ -213,18 +211,20 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
       setValue('tags', tags.map(tag => tag.title))
    }, [tags])
 
-console.log('watch' , watch('text'))
+
 
    return (
       <Grid container spacing={4} flexDirection="column">
          <Grid item flexGrow={1}>
             {isNewPost && <Typography variant='h3' textAlign='center' marginBottom={3}>New Post</Typography>}
-            <Card variant="outlined" sx={{padding: '20px'}}>
+            <Card variant="outlined" sx={{padding: '20px'}} style={{
+               overflow:'visible',
+               boxShadow: '0px 0px 5px 0px rgb(63 81 181)',
+               borderRadius: '10px'
+            }} >
                {isNewPost ? (
                   <>
-                     <div>
-                       {!!previewImg && (<img ref={imageRef} className={classes.imgPreview} src={previewImg} alt="" />)} 
-                     </div>
+                     {!!previewImg && (<img ref={imageRef} className={classes.imgPreview} src={previewImg} alt="" />)} 
                      <Button fullWidth variant='contained' onClick={() => fileRef.current?.click()}>Add Preview Image</Button>
                      <input ref={fileRef} type="file" style={{ display: 'none'}} onChange={handleChangeFile} />
                   </>
@@ -270,7 +270,7 @@ console.log('watch' , watch('text'))
                                  '& .MuiGrid-item': {
                                     padding: '10px 20px',
                                     borderRadius: '10px',
-                                    background: blue[800]
+                                    background: '#3f51b5'
                                  }
                               }}>
                                     {tags.map(({id, title}) => (
@@ -353,7 +353,7 @@ console.log('watch' , watch('text'))
                                  '& .MuiGrid-item': {
                                     padding: '10px 20px',
                                     borderRadius: '10px',
-                                    background: blue[800]
+                                    background: '#3f51b5'
                                  }
                               }}>
                                     {!!post?.tags?.length && post.tags.map((tag) => (
@@ -392,7 +392,10 @@ console.log('watch' , watch('text'))
                         </ExpandMore>
                      </CardActions>
                      <Collapse in={expanded} timeout="auto" unmountOnExit>
-                        <CardContent>
+                        <CardContent sx={{
+                              borderTop: '1px solid rgb(63 81 181)',
+                              borderBottom: '1px solid rgb(63 81 181)',
+                        }}>
                               <TextArea
                                  form={form}
                                  name='text'

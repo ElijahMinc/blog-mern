@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, Skeleton } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { TabValue } from '../../pages/Home'
-import { selectUser } from '../../redux'
-import { AppDispatch } from '../../redux/configureStore'
-import { getPostThunk, Post, selectPost } from '../../redux/Post/PostSlice'
-import { Loader } from '../Loader/Loader'
+import { TabValue } from '../../../pages/Home'
+import { selectUser } from '../../../redux'
+import { AppDispatch } from '../../../redux/configureStore'
+import { getPostThunk, Post, selectPost } from '../../../redux/Post/PostSlice'
+import { Loader } from '../../Common/Loader/Loader'
 
 
 

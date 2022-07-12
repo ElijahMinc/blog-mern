@@ -1,8 +1,8 @@
 import { Grid, Typography } from '@mui/material'
 import React from 'react'
-import { Comment } from '../../redux'
+import { Comment } from '../../../redux'
 import { makeStyles } from '@mui/styles'
-import notFoundImage from '../../static/notFoundImage.png'
+import notFoundImage from '../../../static/notFoundImage.png'
 import moment from 'moment'
 import { blue } from '@mui/material/colors'
 // type CommentsItemProps = [P in keyof typeof Comment]: Comment[P]
@@ -39,23 +39,24 @@ const useStyles = makeStyles({
 
    },
    comment__text: {
-
+      'wordBreak': 'break-all'
    }
 })
 export const CommentsItem: React.FC<Comment> = ({ _id, createdAt, postId, text, updatedAt, userId,userInfo: {firstname, lastname, avatar} }) => {
    const styles = useStyles()
 
-   const avataSrcrOfAuthorComment = avatar ? `http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${avatar}` : notFoundImage
+   const avataSrcrOfAuthorComment = avatar ? `${process.env.REACT_APP_API_URL}/upload/${avatar}` : notFoundImage
 
    return (
-      <Grid item flexGrow={1}>
+      <>
+      <Grid item flexGrow={1} >
          <Grid container spacing={2}>
             <Grid item>
                <div className={styles.commentImageWrapper}>
                   <img src={avataSrcrOfAuthorComment} className={styles.commentImage} alt={avataSrcrOfAuthorComment} />
                </div>
             </Grid>
-            <Grid item flexGrow={1} className={styles.commentContainer} flexDirection="column" justifyContent="center">
+            <Grid item flexGrow={1} flexDirection="column" justifyContent="center">
                <div className={styles.comment__author}>
                   <Typography variant="h6">
                      <span>{firstname}</span>
@@ -70,13 +71,15 @@ export const CommentsItem: React.FC<Comment> = ({ _id, createdAt, postId, text, 
                   </span>
                   
                </div>
-               <div className={styles.comment__text}>
-                  <Typography variant='h6' >
-                     {text}
-                  </Typography>
-               </div>
             </Grid>
          </Grid>
+         <div className={`${styles.comment__text} ${styles.commentContainer}`}>
+            <Typography variant='h6' >
+               {text}
+            </Typography>
+         </div>
       </Grid>
+   </>
+      
       )
 }

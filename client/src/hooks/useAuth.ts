@@ -8,6 +8,7 @@ interface HookAuthDataReturned {
    isAuth: boolean
    token: string | null
    isAuthFetching: boolean
+   error: string
 }
 
 export const useAuth = (): HookAuthDataReturned => {
@@ -16,7 +17,8 @@ export const useAuth = (): HookAuthDataReturned => {
       token,
       
      },
-     isFetching
+     isFetching,
+     error
     } = useSelector(selectUser)
 
   const dispatch = useDispatch<AppDispatch>()
@@ -33,6 +35,7 @@ export const useAuth = (): HookAuthDataReturned => {
   return {
    isAuth: isAuth || !!TOKEN,
    token: token || TOKEN,
-   isAuthFetching: isFetching
+   isAuthFetching: isFetching,
+   error
   }
 }

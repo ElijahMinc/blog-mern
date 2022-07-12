@@ -1,6 +1,7 @@
 export enum LocalStorageKeys {
    TOKEN = 'TOKEN',
-   USER = 'USER'
+   USER = 'USER',
+   THEME = 'THEME'
 }
 
 export class LocalStorageService {

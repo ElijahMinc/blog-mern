@@ -1,11 +1,12 @@
 import { Action, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { FormDefaultValuesPost } from "../../components/Posts/Post.interface"
+import { FormDefaultValuesPost } from "../../components/Logic/Posts/Post.interface"
 import { TabValue } from "../../pages/Home"
 import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
 import { BaseInitState } from "../../types/global.types"
 import { RootState } from "../configureStore"
+import { setToast } from "../Toast"
 
 export interface Likes {
   userIds: string[]
@@ -29,12 +30,14 @@ export interface Post {
 
 interface InitialStatePost {
    posts: Post[] | null
+   tags: Post['tags']
 }
 
 
 const initialState: BaseInitState<InitialStatePost> = {
   data: {
-   posts: null
+   posts: null,
+   tags: []
   },
   isFetching: false,
   error: ''
@@ -43,13 +46,13 @@ const initialState: BaseInitState<InitialStatePost> = {
 export const getPostThunk = createAsyncThunk<Post[], {typeTab: TabValue, id?: string}, {rejectValue: string }>('post/get', async ({typeTab, id}, { dispatch, rejectWithValue }) => {
     try {
 
-      let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/post`
+      let url = `${process.env.REACT_APP_API_URL}/post`
 
       switch (typeTab) {
         case TabValue.ALL:
           break;
         case TabValue.POPULARY:
-            url += '/populary'
+            url += '-popular'
           break;
         case TabValue.CHOSEN_POST:
             url += `/${id}`
@@ -75,6 +78,30 @@ export const getPostThunk = createAsyncThunk<Post[], {typeTab: TabValue, id?: st
     }
 })
 
+export const getTagsByPopularPostThunk = createAsyncThunk<Post['tags'], undefined, {rejectValue: string }>('post/get-popular-tags', async (_: undefined, { dispatch, rejectWithValue }) => {
+  try {
+
+    const url = `${process.env.REACT_APP_API_URL}/post-popular-tags`
+
+
+    const request = await axios.get(url, {
+       headers: {
+          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
+        }
+    })
+    const response = await request.data
+
+    return response
+  } catch (err) {
+    let error: string = 'Error'
+
+    if(typeof err === 'string') error = err
+
+    return rejectWithValue(error)
+  }
+})
+
+
 
 export const createPostThunk = createAsyncThunk<Post, FormDefaultValuesPost, {rejectValue: string }>('post/create', async (post, { dispatch, rejectWithValue }) => {
   try {
@@ -91,7 +118,7 @@ export const createPostThunk = createAsyncThunk<Post, FormDefaultValuesPost, {re
       formData.append(name, value)
     })
 
-    let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/post`
+    let url = `${process.env.REACT_APP_API_URL}/post`
 
 
 
@@ -101,12 +128,16 @@ export const createPostThunk = createAsyncThunk<Post, FormDefaultValuesPost, {re
         }
     })
     const response = await request.data
+    
+    dispatch(setToast({title: 'Post was created! ^^', status: 'success'}))
 
     return response
   } catch (err) {
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+
+    dispatch(setToast({title: error, status: 'error'}))
 
     return rejectWithValue(error)
   }
@@ -127,7 +158,7 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
       formData.append(name, value)
     })
 
-    let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/post`
+    let url = `${process.env.REACT_APP_API_URL}/post`
 
 
     const request = await axios.put(url, formData, {
@@ -137,11 +168,16 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
     })
     const response = await request.data
 
+    dispatch(setToast({title: 'Post was edited! ^^', status: 'success'}))
+
+
     return response
   } catch (err) {
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+
+    dispatch(setToast({title: error, status: 'error'}))
 
     return rejectWithValue(error)
   }
@@ -151,7 +187,7 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
 export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string }>('post/edit/like', async (_id, { dispatch, rejectWithValue }) => {
   try {
 
-    let url = `http://localhost:${process.env.REACT_APP_SERVER_PORT}/post/like/${_id}`
+    let url = `${process.env.REACT_APP_API_URL}/post/like/${_id}`
 
 
     const request = await axios.put(url, _id, {
@@ -161,11 +197,15 @@ export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string
     })
     const response = await request.data
 
+    dispatch(setToast({title: 'Post was liked', status: 'success'}))
+
     return response
   } catch (err) {
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+    
+    dispatch(setToast({title: error, status: 'error'}))
 
     return rejectWithValue(error)
   }
@@ -176,17 +216,20 @@ export const deletePostThunk = createAsyncThunk<{ posts: Post[], message: string
     const formData = new FormData()
     formData.append('_id', _id)
 
-    const request = await axios.delete(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/post`, {
+    const request = await axios.delete(`${process.env.REACT_APP_API_URL}/post`, {
        data: formData,
        headers: {
           'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
         }
     })
     const response = await request.data
+    dispatch(setToast({title: 'Post was deleted', status: 'success'}))
 
     return response
   } catch (err) {
     let error: string = 'Error'
+
+    dispatch(setToast({title: error, status: 'error'}))
 
     if(typeof err === 'string') error = err
 
@@ -258,6 +301,19 @@ export const postSlice = createSlice({
       state.isFetching = true
     })
     builder.addCase(deletePostThunk.rejected, (state, action) => {
+      state.isFetching = false
+      state.error = action.payload || ''
+    })
+
+
+    builder.addCase(getTagsByPopularPostThunk.fulfilled, (state, action) => {
+      state.data.tags = action.payload
+      state.isFetching = false
+    })
+    builder.addCase(getTagsByPopularPostThunk.pending, (state, _) => {
+      state.isFetching = true
+    })
+    builder.addCase(getTagsByPopularPostThunk.rejected, (state, action) => {
       state.isFetching = false
       state.error = action.payload || ''
     })

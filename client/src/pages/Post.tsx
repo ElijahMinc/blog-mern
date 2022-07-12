@@ -3,9 +3,9 @@ import { Button, Container } from '@mui/material'
 import React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 
-import { LaunchPosts } from '../components/Posts/LaunchPosts'
+import { LaunchPosts } from '../components/Logic/Posts/LaunchPosts'
 import { TabValue } from './Home'
-import { PostReview } from '../components/Posts/PostReview'
+import { PostReview } from '../components/Logic/Posts/PostReview'
 
 
 

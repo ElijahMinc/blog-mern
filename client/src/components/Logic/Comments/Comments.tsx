@@ -1,8 +1,8 @@
 import { Button, Grid, TextField } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Comment, CommentBody, createCommentThunk, getCommentsByPostIdThunk, getCommentsThunk, selectComments, selectUser } from '../../redux'
-import { AppDispatch } from '../../redux/configureStore'
+import { Comment, CommentBody, createCommentThunk, getCommentsByPostIdThunk, getCommentsThunk, selectComments, selectUser } from '../../../redux'
+import { AppDispatch } from '../../../redux/configureStore'
 import { CommentsList } from './CommentsList'
 
 interface CommentsProps {

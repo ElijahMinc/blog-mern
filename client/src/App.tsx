@@ -1,27 +1,53 @@
 
+import { Theme } from '@emotion/react';
+import { createTheme, CssBaseline, PaletteMode, ThemeProvider } from '@mui/material';
 import { Container } from '@mui/system';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { BrowserRouter} from 'react-router-dom';
 
 import './App.css';
-import { AppRouter } from './components/AppRouter/AppRouter';
-import { Header } from './components/Header/Header';
+import { AppRouter } from './components/Common/AppRouter/AppRouter';
+import { Toast } from './components/Common/Toast/Toast';
+import { Header } from './components/Common/Header/Header';
+import { ThemeCustomProvider, useCustomTheme } from './context/Theme/ThemedProvider';
 
 
+
+const defaultConfigPalette: Theme = {
+  primary: {
+    main: '#3f51b5',
+  },
+  secondary: {
+    main: '#d81b60'
+  },
+}
 
 const App: React.FC = () => {
+  const { toggleTheme } = useCustomTheme()
 
 
+  const theme = useMemo(() => createTheme({
+    palette: {
+      mode: toggleTheme,
+      ...defaultConfigPalette,
+    }
+  }), [toggleTheme])
+
+  console.log('theme', theme)
   return (
-    <BrowserRouter>
-      <Header/>
-      <Container maxWidth="lg" sx={{
-        height: '100%',
-        padding: '50px 0'
-      }}>
-          <AppRouter />
-      </Container>
-    </BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+          <BrowserRouter>
+            <Toast />
+            <Header/>
+            <Container maxWidth="lg" sx={{
+              height: '100%',
+              padding: '50px 0'
+            }}>
+                <AppRouter />
+            </Container>
+         </BrowserRouter>
+      </ThemeProvider>
   );
 }
 

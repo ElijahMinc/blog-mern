@@ -3,7 +3,8 @@ import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
 import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
 import { BaseInitState } from "../../types/global.types"
-import { RootState } from "../configureStore"
+import { AppDispatch, RootState } from "../configureStore"
+import { setToast } from "../Toast"
 
 interface InitialStateUser {
   isAuth: boolean
@@ -29,16 +30,19 @@ const initialState: BaseInitState<InitialStateUser> & { isFetchingAuth: boolean 
   error: ''
 }
 
-export const loginThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, {rejectValue: string }>('user/login', async (user, { dispatch, rejectWithValue }) => {
+export const loginThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, { rejectValue: string }>('user/login', async (user, { dispatch, rejectWithValue }) => {
     try {
-      const request = await axios.post(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/login`, user)
-      const response = await request.data
+      const request = await axios.post(`${process.env.REACT_APP_API_URL}/login`, user)
+      const response:InitialStateUser = await request.data
+
+      dispatch(setToast({title: `Hello, ${response.user.firstname} ${response.user.lastname}`, status: 'success'}))
 
       return response
     } catch (err) {
       let error: string = 'Error'
 
       if(typeof err === 'string') error = err
+      dispatch(setToast({title: error, status: 'error'}))
 
       return rejectWithValue(error)
     }
@@ -47,8 +51,10 @@ export const loginThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, Aut
 export const registerThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, {rejectValue: string }>('user/register', async (user, { dispatch, rejectWithValue }) => {
   try {
 
-    const request = await axios.post(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/register`, user)
-    const response = await request.data
+    const request = await axios.post(`${process.env.REACT_APP_API_URL}/register`, user)
+    const response: InitialStateUser = await request.data
+
+    dispatch(setToast({title: `Hello, ${response.user.email}`, status: 'success'}))
 
     return response
   } catch (err) {
@@ -56,6 +62,7 @@ export const registerThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, 
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+    dispatch(setToast({title: error, status: 'error'}))
 
     return rejectWithValue(error)
   }
@@ -64,7 +71,7 @@ export const registerThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, 
 export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user'], string, {rejectValue: string }>('login/user', async (token, { dispatch, rejectWithValue }) => {
   try {
 
-    const request = await axios.get(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/user`, {
+    const request = await axios.get(`${process.env.REACT_APP_API_URL}/user`, {
       headers: {
         'Authorization': `Bearer ${token}` 
       }
@@ -72,12 +79,17 @@ export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user
 
     const response = await request.data
 
+    dispatch(setToast({title: `Hello, ${response.firstname} ${response.lastname}`, status: 'success'}))
+
+
     return response
   } catch (err) {
     console.log(err)
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+    dispatch(setToast({title: error, status: 'error'}))
+
     dispatch(refreshAuth())
     return rejectWithValue(error)
   }
@@ -88,13 +100,15 @@ export const setAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, 'isA
     const form = new FormData()
     form.append('image', avatar)
 
-    const request = await axios.put(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/user/avatar`,form, {
+    const request = await axios.put(`${process.env.REACT_APP_API_URL}/user/avatar`,form, {
       headers: {
         'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}` 
       }
     })
 
     const response = await request.data
+
+    dispatch(setToast({title: 'Avatar was loaded', status: 'success'}))
 
     dispatch(removeUserFromStorage())
 
@@ -104,6 +118,9 @@ export const setAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, 'isA
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
+
+    dispatch(setToast({title: error, status: 'error'}))
+
     return rejectWithValue(error)
   }
 })
@@ -111,7 +128,7 @@ export const setAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, 'isA
 export const deleteAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, 'isAuth'>['user'], message: string }, undefined, {rejectValue: string }>('login/user/avatar/delete', async (_ = undefined, { dispatch, rejectWithValue }) => {
   try {
 
-    const request = await axios.delete(`http://localhost:${process.env.REACT_APP_SERVER_PORT}/user/avatar`,{
+    const request = await axios.delete(`${process.env.REACT_APP_API_URL}/user/avatar`,{
       headers: {
         'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}` 
       }
@@ -136,7 +153,8 @@ export const userSlice = createSlice({
   reducers: {
     refreshAuth(state){
       state.data = initialState.data
-      LocalStorageService.clear()
+      LocalStorageService.delete(LocalStorageKeys.TOKEN)
+      LocalStorageService.delete(LocalStorageKeys.USER)
     },
     setToken(state, action: PayloadAction<string>){
       state.data.token = action.payload

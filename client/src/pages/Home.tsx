@@ -4,10 +4,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { selectUser, userThunk } from '../redux'
 import {makeStyles} from '@mui/styles'
 import { AppDispatch } from '../redux/configureStore'
-import { PostList } from '../components/Posts/PostList'
-import { LaunchPosts } from '../components/Posts/LaunchPosts'
-import { Sidebar } from '../components/Sidebar/Sidebar'
-import { Loader } from '../components/Loader/Loader'
+import { PostList } from '../components/Logic/Posts/PostList'
+import { LaunchPosts } from '../components/Logic/Posts/LaunchPosts'
+import { Sidebar } from '../components/Common/Sidebar/Sidebar'
+import { Loader } from '../components/Common/Loader/Loader'
 import { Redirect } from 'react-router-dom'
 
 interface HomeProps {
@@ -39,13 +39,11 @@ export enum TabValue {
 
 
 export const Home: React.FC<HomeProps> = () => {
-   const [value, setValue] = React.useState<TabValue>(TabValue.ALL);
+   const [value, setValue] = React.useState<TabValue>(TabValue.ALL)
 
    const classes = useStyles()
 
-   const handleChange = (event: React.SyntheticEvent, newValue: TabValue) => {
-      setValue(newValue);
-    };
+   const handleChange = (_: React.SyntheticEvent, newValue: TabValue) => setValue(newValue)
 
 
 
@@ -62,7 +60,7 @@ export const Home: React.FC<HomeProps> = () => {
                            indicatorColor="secondary"
                            aria-label="secondary tabs "
                         >
-                           <Tab value={TabValue.ALL} label="All Posts" />
+                           <Tab value={TabValue.ALL} color="primary.light" label="All Posts" />
                            <Tab value={TabValue.POPULARY} label="Populary" />
                         </Tabs>
                      </Box>

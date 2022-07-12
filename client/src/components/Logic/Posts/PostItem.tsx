@@ -1,19 +1,19 @@
 import { Button, Card, CardActions, CardContent, CardMedia, Collapse, Grid, IconButton, IconButtonProps, Paper, Typography } from '@mui/material'
 import moment from 'moment'
 import React, { useCallback, useLayoutEffect, useState } from 'react'
-import { deletePostThunk, likePostThunk, Post as PostInterface, selectUser } from '../../redux'
+import { deletePostThunk, likePostThunk, Post as PostInterface, selectUser } from '../../../redux'
 import {styled} from '@mui/material/styles'
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { makeStyles } from '@mui/styles';
-import notFoundImage from '../../static/notFoundImage.png'
+import notFoundImage from '../../../static/notFoundImage.png'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux'
 import blue from '@mui/material/colors/blue'
 import { useHistory } from 'react-router-dom'
-import { AppDispatch } from '../../redux/configureStore'
-import { TextArea } from '../TextArea/TextArea'
+import { AppDispatch } from '../../../redux/configureStore'
+import { TextArea } from '../../Common/TextArea/TextArea'
 import { convertToHTML } from 'draft-convert'
 import { ContentState, EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
@@ -70,16 +70,11 @@ const useStyles = makeStyles({
    cardContentImg: {
       width: '100%',
       height: '100%'
-      // position: 'absolute',
-      // top: '0',
-      // left: '0',
-      // objectFit: 'cover'
    },
    cardContentMedia: {
       cursor: 'pointer',
-      width: '100%',
-      height: '500px',
-      overflow: 'hidden'
+      maxWidth: '100%',
+      borderRadius: '10px'
    },
    cardContentInfo: {
       display: 'flex',
@@ -96,26 +91,29 @@ const useStyles = makeStyles({
       gap: '20px'
    },
    cardMediaContainer: {
-      position: 'relative'
+      position: 'relative',
+      width: '100%',
+      height: '600px',
+      padding: '20px'
    },
    cardMediaEdit: {
       position: 'absolute',
-      top:'10px',
-      right: '50px',
+      top:'25px',
+      right: '70px',
       cursor: 'pointer',
-      transition: '.3s all',
+      transition: '.3s all !important',
       '&:hover': {
-         transform: 'translateY(-5px)'
+         transform: 'translateY(-5px) rotate(8deg)'
       }
    },
    cardMediaRemove: {
       position: 'absolute',
-      top:'10px',
-      right: '10px',
+      top:'25px',
+      right: '20px',
       cursor: 'pointer',
-      transition: '.3s all',
+      transition: '.3s all !important',
       '&:hover': {
-         transform: 'translateY(-5px)'
+         transform: 'translateY(-5px) rotate(8deg)'
       }
    },
 })
@@ -134,9 +132,6 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
    } = useSelector(selectUser)
 
    const isLikedStatus = userIds.indexOf(authUserId) !== -1
-   // console.log('isLikedStatus', isLikedStatus)
-   // console.log('userIds', userIds)
-   // console.log('authUserId', authUserId)
 
    const [expanded, setExpanded] = useState(false);
    const [like, setLike] = useState(isLikedStatus)
@@ -172,15 +167,20 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
       )
 
    return  (
-       <Grid item>
-         <Card variant="outlined">
+       <Grid item >
+         <Card variant="outlined" sx={{
+
+                 boxShadow: '0px 0px 5px 0px rgb(63 81 181)',
+               // boxShadow: '0px 0px 5px 0px rgb(216, 27, 96)',
+               borderRadius: '10px'
+         }}>
             <div className={classes.cardMediaContainer}>
                <CardMedia
                   onClick={handleRedirectToPost}
                   component="img"
                   className={classes.cardContentMedia}
-                  height="300px"
-                  image={imageName ? `http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${imageName}` : notFoundImage}
+                  height="100%"
+                  image={imageName ? `${process.env.REACT_APP_API_URL}/upload/${imageName}` : notFoundImage}
                   alt={imageName ?? ''}
                />
                {isAuthor && (
@@ -194,7 +194,7 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
             <CardContent className={classes.cardContent}>
                <div className={classes.cardContentHeader}>
                   <div className={classes.cardContentLogo} >
-                     <img className={classes.cardContentImg} src={avatar ? `http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${avatar}` : notFoundImage} alt={avatar ?? ''} />
+                     <img className={classes.cardContentImg} src={avatar ? `${process.env.REACT_APP_API_URL}/upload/${avatar}` : notFoundImage} alt={avatar ?? ''} />
                   </div>
                   <div className={classes.cardContentInfo} >
                      <Grid item container spacing={1} alignItems="center">
@@ -226,7 +226,7 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                         '& .MuiGrid-item': {
                            padding: '10px 20px',
                            borderRadius: '10px',
-                           background: blue[800]
+                           background: '#3f51b5'
                         }
                      }}>
                         {!!tags?.length && tags.map((tag) => (
@@ -265,7 +265,10 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                   </ExpandMore>
                </CardActions>
                <Collapse in={expanded} timeout="auto" unmountOnExit>
-                  <CardContent>
+                  <CardContent sx={{
+                     borderTop: '1px solid rgb(63 81 181)',
+                     borderBottom: '1px solid rgb(63 81 181)',
+                  }}>
                      <Editor 
                         toolbarHidden
                         readOnly

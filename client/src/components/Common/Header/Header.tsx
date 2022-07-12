@@ -1,12 +1,13 @@
 import { AccountCircle } from '@mui/icons-material';
-import { AppBar, Button, Grid, IconButton, Link, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
+import { AppBar, Button, Grid, IconButton, Link, Menu, MenuItem, Toolbar, Typography, useTheme } from '@mui/material'
 import React, { ChangeEvent, useCallback, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
-import { useCheckIsLoginPage } from '../../hooks/useCheckIsLoginPage';
-import { deleteAvatarThunk, refreshAuth, resetPosts, selectUser, setAvatarThunk } from '../../redux';
-import { AppDispatch } from '../../redux/configureStore';
+import { useHistory, useLocation } from 'react-router-dom';
+import { useCheckIsLoginPage } from '../../../hooks/useCheckIsLoginPage';
+import { deleteAvatarThunk, refreshAuth, resetPosts, selectUser, setAvatarThunk } from '../../../redux';
+import { AppDispatch } from '../../../redux/configureStore';
 import { makeStyles } from '@mui/styles'
+import { useCustomTheme } from '../../../context/Theme/ThemedProvider';
 
 
 const useStyles = makeStyles({
@@ -31,6 +32,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = () => {
    const [file, setFile] = useState<File | undefined>(undefined)
+   const { handleToggleTheme } = useCustomTheme()
+   const theme = useTheme()
 
    const styles = useStyles()
 
@@ -41,12 +44,15 @@ export const Header: React.FC<HeaderProps> = () => {
       user: { firstname, lastname, avatar }
      }} = useSelector(selectUser)
    const dispatch = useDispatch<AppDispatch>()
-     console.log('firstname', firstname)
-     console.log('lastname', lastname)
+ 
    const { push } = useHistory()
    const isLoginPage = useCheckIsLoginPage()
+   const { pathname } = useLocation()
+     
+   const firstLetter = pathname?.substring(1)?.split('')?.[0]?.toUpperCase()
+   const currentPage = pathname ? [...firstLetter, ...pathname.substring(2).split(' ')].join('') : 'Home'
 
-   const infoPage = isAuth ? 'Home' : 'Auth Page' 
+   const infoPage = isAuth ? currentPage : 'Auth Page' 
 
    const withAuthLoginText = isAuth ? 'Logout' : 'Login'
    const withNonAuthLoginText = isLoginPage ? 'Register' : 'Login'
@@ -70,7 +76,6 @@ export const Header: React.FC<HeaderProps> = () => {
 
       const file = target?.files[0]
       setFile(file)
-      console.log('e', target?.files)
 
       await dispatch(setAvatarThunk(file))
     }
@@ -82,11 +87,17 @@ export const Header: React.FC<HeaderProps> = () => {
    return (
          <AppBar position="relative" sx={{
             zIndex: '1000'
-         }}>
+         }} color="primary">
             <Toolbar >
                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   {infoPage}
                </Typography>
+                  <Button sx={{
+                     marginRight: '10px'
+                  }} color="secondary" variant="contained" onClick={() => theme.palette.mode === 'light' ?  handleToggleTheme('dark') : handleToggleTheme('light') }>
+                     theme
+                  </Button>
+                  
                {isAuth ? (
                      <Grid container sx={{
                         width: 'auto'
@@ -106,7 +117,7 @@ export const Header: React.FC<HeaderProps> = () => {
                               color="inherit"
                            >
                               {avatar ? <div className={styles.avatarWrapperImg}>
-                                    <img className={styles.avatarImg} src={`http://localhost:${process.env.REACT_APP_SERVER_PORT}/upload/${avatar}`} />
+                                    <img className={styles.avatarImg} src={`${process.env.REACT_APP_API_URL}/upload/${avatar}`} alt="" />
                               </div> : (
                                     <AccountCircle />
                               )}  
@@ -136,7 +147,7 @@ export const Header: React.FC<HeaderProps> = () => {
                               ) : (
                                  <Button variant="contained" color='secondary' onClick={() => fileRef.current?.click()}>
                                     Setup Avatar
-                                    <input ref={fileRef} type="file" style={{display: 'none'}} onChange={setAvatar} />
+                                    <input ref={fileRef} type="file" accept="image/png, image/jpeg, 'image/jpg" multiple={false}  style={{display: 'none'}} onChange={setAvatar} />
                                  </Button>
                               )}
                            </MenuItem>
