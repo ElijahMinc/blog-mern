@@ -29,6 +29,14 @@ export class CommentService {
       return commentsByUserId
    }
 
+
+   async removeAllCommentsByIdPost(postId:  Types.ObjectId | string | undefined){
+      const commentsByUserId = await Comment.deleteMany({ postId: {$all: postId } })
+      
+      if(!commentsByUserId) throw new Error("Failed with delete Comments")
+      return commentsByUserId
+   }
+
    async getAll(){
       const comments = await Comment.find()
       return comments

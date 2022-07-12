@@ -11,12 +11,15 @@ import { v4 as uuidv4 } from 'uuid'
 import UserService from "../../services/UserService";
 import mongoose, { HydratedDocument, ObjectId } from "mongoose";
 import { UserInterface } from "../../modules/User/user.interface";
+import CommentService from '../../services/CommentService';
 
 export class PostController {
 
    getOnePostUrl: string = '/post/:id'
 
    updateLikeUrlPost: string = '/post/like/:id'
+   getPopularPostsUrl: string = '/post-popular'
+   getTagsByPopularPostsUrl: string = '/post-popular-tags'
 
    getAllPostUrl: string = '/post'
    createPostUrl: string = '/post'
@@ -38,17 +41,43 @@ export class PostController {
    async getOne(req: AuthRequest, res: Response) {
       try {
          const { id: _id } = req.params 
-         console.log('_id', _id)
+
          const post = await PostService.getById(_id)
          if(Array.isArray(post)) return res.status(200).json(post)
 
          return res.status(200).json([post])
+      } catch (e) {
+         console.log('e', e)
+         return res.status(400).json({
+            message: 'Faild with get'
+         })
+      }
+   }
+
+   async getPopular(_: AuthRequest, res: Response) {
+      try {
+         const posts = await PostService.getPopular()
+
+         return res.status(200).json(posts)
       } catch (e) {
          return res.status(400).json({
             message: 'Faild with get'
          })
       }
    }
+
+   async getTagsByPopularPost(_: AuthRequest, res: Response) {
+      try {
+         const tags = await PostService.getTagsByPopular()
+
+         return res.status(200).json(tags)
+      } catch (e) {
+         return res.status(400).json({
+            message: 'Faild with get'
+         })
+      }
+   }
+
 
    async likePost(req: AuthRequest, res: Response){
       try {
@@ -82,7 +111,7 @@ export class PostController {
             post.likes.likes = ++post.likes.likes
 
          }
-         console.log(isLikedPostOfUserStatus)
+
          const updatedPost = await PostService.savePost(post)
 
 
@@ -98,6 +127,7 @@ export class PostController {
    }
 
    async createPost(req: AuthRequest, res: Response) {
+
       try {
          const { text, title, ...rest } = req.body as RequestPostBody
          const tagNames = rest.tags as string[]
@@ -120,6 +150,7 @@ export class PostController {
             },
             userId: req.userId!,
             imageName: null,
+            tags: []
          }
 
          if(tagNames) post.tags = tagNames
@@ -127,6 +158,11 @@ export class PostController {
 
          if(image){
             generatedNameImg = `${uuidv4()}.jpg`
+
+            if (!fs.existsSync(defaultPath)){
+               fs.mkdirSync(defaultPath)
+            }//! QUESTION!
+
             await image.mv(path.join(defaultPath, generatedNameImg))
             post.imageName = generatedNameImg
          }
@@ -156,6 +192,7 @@ export class PostController {
             _id,
             title,
             text,
+            tags: []
          }
 
          updatePost.tags = !!tags ? tags : []
@@ -171,6 +208,10 @@ export class PostController {
             const generatedNameImg = `${uuidv4()}.jpg`;
 
             updatePost.imageName = generatedNameImg
+            
+            if (!fs.existsSync(defaultPath)){
+               fs.mkdirSync(defaultPath)
+            } //! QUESTION!
 
             await image.mv(path.join(defaultPath, generatedNameImg))
          }
@@ -189,7 +230,7 @@ export class PostController {
    async deletePost(req: AuthRequest, res: Response) {
       try {
          const { _id } = req.body
-         console.log('_ID', _id)
+
          const post = await PostService.getById(_id)
 
          if(post.imageName){
@@ -199,6 +240,8 @@ export class PostController {
          }
 
          await PostService.delete(post)
+
+         await CommentService.removeAllCommentsByIdPost(post._id)
 
          const posts = await PostService.getAll()
 

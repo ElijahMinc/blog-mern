@@ -53,6 +53,8 @@ export class UserController {
    }
 
    async setAvatar(req: AuthRequest, res: Response){
+
+
       try {
          const defaultPath = path.resolve(__dirname, '../../static/')
 
@@ -67,21 +69,25 @@ export class UserController {
          })
 
          generatedNameImg = `${uuidv4()}.jpg`
+         console.log('!fs.existsSync(path.join(defaultPath))',!fs.existsSync(path.join(defaultPath)))
+         if (!fs.existsSync(path.join(defaultPath))){
+            fs.mkdirSync(path.join(defaultPath))
+         }//! QUESTION!
 
          await image.mv(path.join(defaultPath, generatedNameImg))
 
          user.avatar = generatedNameImg
 
-         console.log('DELETED')
+
 
          const updatedUser =  await UserService.update(user)
-         console.log('user.avatar', updatedUser)
+
          // const userInfo: Pick<UserInterface, 'firstname' | 'lastname' | 'avatar'> = {
          //    firstname: updatedUser.firstname,
          //    lastname: updatedUser.lastname,
          //    avatar: updatedUser.avatar
          // }
-         console.log('user.avatar', user.avatar)
+
           await PostService.updateManyAvatarByUserId(req.userId, updatedUser.avatar)
           await CommentService.updateManyAvatarByUserId(req.userId, updatedUser.avatar)
           
@@ -107,7 +113,14 @@ export class UserController {
          })
 
 
+       
+
          const imagePath = path.join(defaultPath, user.avatar);
+
+         if (!fs.existsSync(defaultPath)){
+            fs.mkdirSync(defaultPath)
+         }//! QUESTION!
+
          fs.unlinkSync(imagePath)
 
          user.avatar = null

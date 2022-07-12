@@ -6,7 +6,8 @@ import User from "../modules/User/User";
 import { UserInterface } from "../modules/User/user.interface";
 
 class PostService {
-
+   popularPosts: number =  1
+ 
    async uploadFile(){
  
    }
@@ -14,6 +15,17 @@ class PostService {
    async getAll(){
       const posts = await Post.find()
       return posts
+   }
+
+   async getPopular(){
+      const posts = await Post.find({ 'likes.likes': {$gte: this.popularPosts } })
+      return posts
+   }
+
+   async getTagsByPopular(){
+      const posts = await Post.find({ 'likes.likes': {$gte: this.popularPosts } })
+      const tags = posts.map(post => post.tags).flat()
+      return tags
    }
 
    async getById(_id: Types.ObjectId | string | undefined){

@@ -6,7 +6,7 @@ export interface PostInterface {
    text: string
    userId: mongoose.Schema.Types.ObjectId | string
    userInfo: Pick<UserInterface, 'firstname' | 'lastname'> & { avatar?: string | null }
-   tags?: string[]
+   tags: string[]
    imageName?: string | null
    likes: {
       userIds: (mongoose.Schema.Types.ObjectId | string)[]
