@@ -15,7 +15,6 @@ export const useAuth = (): HookAuthDataReturned => {
    const { data: { 
       isAuth,
       token,
-      
      },
      isFetching,
      error
@@ -23,14 +22,14 @@ export const useAuth = (): HookAuthDataReturned => {
 
   const dispatch = useDispatch<AppDispatch>()
 
-  const TOKEN = useMemo(() => LocalStorageService.get<string>(LocalStorageKeys.TOKEN), [isAuth])
+  const TOKEN = useMemo(() => LocalStorageService.get<string>(LocalStorageKeys.TOKEN), [token])
 
 
   useEffect(() => {
    if(!!TOKEN){
      dispatch(setToken(TOKEN))
    }
-  }, [token])
+  }, [TOKEN])
 
   return {
    isAuth: isAuth || !!TOKEN,

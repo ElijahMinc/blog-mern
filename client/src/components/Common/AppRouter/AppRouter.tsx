@@ -14,7 +14,7 @@ interface AppRouterProps {
 
 export const AppRouter: React.FC<AppRouterProps> = () => {
   const { isAuth } = useAuth()
-  
+
    return isAuth ? (
            <Layout>
               <Switch>

@@ -30,6 +30,7 @@ const initialState: BaseInitState<InitialStateUser> & { isFetchingAuth: boolean 
   error: ''
 }
 
+
 export const loginThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, { rejectValue: string }>('user/login', async (user, { dispatch, rejectWithValue }) => {
     try {
       const request = await axios.post(`${process.env.REACT_APP_API_URL}/login`, user)
@@ -83,14 +84,17 @@ export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user
 
 
     return response
-  } catch (err) {
-    console.log(err)
+  } catch (err: any) {
+
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
-    dispatch(setToast({title: error, status: 'error'}))
+    
+    dispatch(setToast({title: err.response?.data?.message || error, status: 'error'}))
+    
+    LocalStorageService.delete(LocalStorageKeys.TOKEN)
+    LocalStorageService.delete(LocalStorageKeys.USER)
 
-    dispatch(refreshAuth())
     return rejectWithValue(error)
   }
 })
@@ -114,13 +118,11 @@ export const setAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, 'isA
 
     return response
   } catch (err) {
-    console.log(err)
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
 
     dispatch(setToast({title: error, status: 'error'}))
-
     return rejectWithValue(error)
   }
 })
@@ -140,7 +142,6 @@ export const deleteAvatarThunk = createAsyncThunk<{user:Omit<InitialStateUser, '
 
     return response
   } catch (err) {
-    console.log(err)
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err
@@ -152,9 +153,8 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     refreshAuth(state){
-      state.data = initialState.data
-      LocalStorageService.delete(LocalStorageKeys.TOKEN)
-      LocalStorageService.delete(LocalStorageKeys.USER)
+      state.data = {...initialState.data}
+
     },
     setToken(state, action: PayloadAction<string>){
       state.data.token = action.payload
@@ -214,7 +214,10 @@ export const userSlice = createSlice({
       state.isFetching = true
     })
     builder.addCase(userThunk.rejected, (state, action) => {
+      state.data.user = {...initialState.data.user}
       state.data.isAuth = false
+      state.data.token = null
+
       state.isFetching = false
       state.error = action.payload || ''
     })

@@ -47,12 +47,8 @@ export const Header: React.FC<HeaderProps> = () => {
  
    const { push } = useHistory()
    const isLoginPage = useCheckIsLoginPage()
-   const { pathname } = useLocation()
-     
-   const firstLetter = pathname?.substring(1)?.split('')?.[0]?.toUpperCase()
-   const currentPage = pathname ? [...firstLetter, ...pathname.substring(2).split(' ')].join('') : 'Home'
 
-   const infoPage = isAuth ? currentPage : 'Auth Page' 
+   const infoPage = isAuth ? 'Login Page' : 'Auth Page' 
 
    const withAuthLoginText = isAuth ? 'Logout' : 'Login'
    const withNonAuthLoginText = isLoginPage ? 'Register' : 'Login'

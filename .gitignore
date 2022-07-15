@@ -6,6 +6,7 @@ server/node_modules
 client/package-lock
 server/package-lock
 server/build
+client/build
 
 /.pnp
 .pnp.js

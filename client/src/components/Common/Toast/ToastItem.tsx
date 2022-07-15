@@ -32,9 +32,9 @@ export const ToastItem: React.FC<ToastItemProps> = ({ id, status, title }) => {
    const styles = useStyles()
 
    useEffect(() => {
-      console.log('here useEffect')
 
       timeoutRef.current = setTimeout(() => {
+         timeoutRef.current = setTimeout(() => dispatch(removeToast(id)) , 3000)
          setIsClosing(true)
       }, 2000)
 

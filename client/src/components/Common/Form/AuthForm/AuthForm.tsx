@@ -12,6 +12,7 @@ import { AuthFormDefaultValues } from './types'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginThunk, registerThunk, selectUser } from '../../../../redux'
 import { AppDispatch } from '../../../../redux/configureStore'
+import { useHistory, useLocation } from 'react-router-dom'
 
 
 
@@ -26,7 +27,7 @@ export const AuthForm: React.FC = () => {
    const { isFetchingAuth } = useSelector(selectUser)
    const isLoginPage = useCheckIsLoginPage()
    const dispatch = useDispatch<AppDispatch>()
-
+   const {push} = useHistory()
    const form = useForm<AuthFormDefaultValues>({
       defaultValues,
       mode: 'onSubmit',
@@ -34,7 +35,15 @@ export const AuthForm: React.FC = () => {
 
    const { handleSubmit } = form
 
-   const onSubmit = (data: AuthFormDefaultValues) =>  isLoginPage ? dispatch(loginThunk(data)) : dispatch(registerThunk(data))
+   const onSubmit = async (data: AuthFormDefaultValues) =>  {
+      if(isLoginPage){
+        await dispatch(loginThunk(data))
+      }   else{
+        await dispatch(registerThunk(data))
+      }
+
+      push('/home')
+   }
 
 
    return (

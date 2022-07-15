@@ -13,7 +13,10 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-   const { token, isAuthFetching, isAuth } = useAuth()
+   const { token, isAuthFetching } = useAuth()
+   const {data: {
+      user: { _id }
+   }} = useSelector(selectUser)
    const dispatch = useDispatch<AppDispatch>()
 
 
@@ -21,14 +24,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       !!token && dispatch(userThunk(token))
    }, [token])
 
-   if(!isAuth && !isAuthFetching){
-      <Redirect to='/' />
-   }
 
    return (
       <Container maxWidth="lg">
          {
-         isAuthFetching 
+         isAuthFetching
 
             ? <Loader/> 
             
