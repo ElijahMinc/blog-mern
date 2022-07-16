@@ -154,7 +154,8 @@ export const userSlice = createSlice({
   reducers: {
     refreshAuth(state){
       state.data = {...initialState.data}
-
+      LocalStorageService.delete(LocalStorageKeys.TOKEN)
+      LocalStorageService.delete(LocalStorageKeys.USER)
     },
     setToken(state, action: PayloadAction<string>){
       state.data.token = action.payload
