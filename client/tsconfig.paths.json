@@ -1,0 +1,49 @@
+{
+   "compilerOptions": {
+       "baseUrl": ".",
+       "paths": {
+           "@/*": [
+               "./src/*"
+           ],
+           "@pages/*": [
+                "./src/pages/*"
+           ],
+           "@components/*": [
+                "./src/components/*"
+           ],
+           "@redux/*": [
+                "./src/redux/*"
+           ],
+           "@helpers/*": [
+                "./src/helpers/*"
+           ],
+           "@typesModule/*": [
+                "./src/types/*"
+           ],
+           "@Common/*": [
+                "./src/components/Common/*"
+           ],
+           "@Logic/*": [
+               "./src/components/Logic/*"
+          ],
+           "@hooks/*": [
+                "./src/hooks/*"
+           ],
+           "@context/*": [
+                "./src/context/*"
+           ],
+           "@HOC/*": [
+                "./src/HOC/*"
+           ],
+           "@static/*": [
+                "./src/static/*"
+           ],
+           "@utils/*": [
+            "./src/utils/*"
+          ],
+          "@service/*": [
+               "./src/service/*"
+          ],
+       }
+   }
+}

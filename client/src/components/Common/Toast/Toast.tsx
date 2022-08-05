@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { makeStyles } from '@mui/styles'
-import { Alert } from '@mui/material'
-import { useDispatch, useSelector } from 'react-redux'
-import { removeToast, selectToast } from '../../../redux'
+import { useSelector } from 'react-redux'
+import { selectToast } from '@redux/index'
 import { ToastItem } from './ToastItem'
 
 const useStyles = makeStyles({

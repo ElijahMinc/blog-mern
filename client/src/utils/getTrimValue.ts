@@ -1,0 +1,1 @@
+export const getTrimValue = (value: string) => value.trim()

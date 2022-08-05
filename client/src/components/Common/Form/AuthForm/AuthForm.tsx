@@ -12,7 +12,7 @@ import { AuthFormDefaultValues } from './types'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginThunk, registerThunk, selectUser } from '../../../../redux'
 import { AppDispatch } from '../../../../redux/configureStore'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 
 
 

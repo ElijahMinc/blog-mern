@@ -1,9 +1,9 @@
 import { Button, Grid, TextField } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Comment, CommentBody, createCommentThunk, getCommentsByPostIdThunk, getCommentsThunk, selectComments, selectUser } from '../../../redux'
-import { AppDispatch } from '../../../redux/configureStore'
-import { CommentsList } from './CommentsList'
+import { CommentBody, createCommentThunk, getCommentsByPostIdThunk, selectComments, selectUser } from '@redux/index'
+import { AppDispatch } from '@redux/configureStore'
+import { CommentsList } from '../CommentsList/CommentsList'
 
 interface CommentsProps {
    postId: string
@@ -29,6 +29,8 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
 
    const addComment = async () => {
       if(!textFieldValue) return
+      setTextField('')
+
       const newComment: CommentBody = {
          postId,
          userId,
@@ -36,7 +38,6 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
       }
 
       await dispatch(createCommentThunk(newComment))
-      setTextField('')
    }
 
    useEffect(() => {
@@ -51,7 +52,7 @@ export const Comments: React.FC<CommentsProps> = ({ postId }) => {
                <TextField size='small' fullWidth value={textFieldValue} onChange={(e) => setTextField(e.target.value)}/>
             </Grid>
             <Grid item>
-            <Button variant='contained' disabled={!textFieldValue} onClick={addComment}>Add</Button>
+            <Button variant='contained' disabled={!textFieldValue || isFetching} onClick={addComment}>Add</Button>
             </Grid>
          </Grid>
       </>

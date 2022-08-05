@@ -1,8 +1,8 @@
-import React, { useContext, useEffect } from 'react'
-import { createTheme, PaletteMode } from "@mui/material";
+import React, { useContext } from 'react'
+import {  PaletteMode } from "@mui/material";
 import { createContext, useMemo, useState } from "react";
-import { ThemedProviderProps } from "./types";
-import { LocalStorageKeys, LocalStorageService } from '../../service/LocalStorageService';
+import { ThemedProviderProps } from "@context/Theme/types";
+import { LocalStorageKeys, LocalStorageService } from '@service/LocalStorageService';
 
 
 const ThemedProviderContext = createContext<ThemedProviderProps>({} as ThemedProviderProps)

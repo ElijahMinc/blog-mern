@@ -1,33 +1,39 @@
 import { MutableRefObject, useEffect, useRef } from "react"
 
 
-type useScrollType = (parentRef: MutableRefObject<HTMLElement>, childRef: MutableRefObject<HTMLElement>, callback: () => any) => void
+type useScrollType = (parentRef: MutableRefObject<HTMLDivElement | null>, childRef: MutableRefObject<HTMLDivElement | null>, callback: () => void,  options?: IntersectionObserverInit) => IntersectionObserver | undefined
 
-export const useScroll: useScrollType = (parentRef, childRef, callback) => {
+export const useScroll: useScrollType = (parentRef, childRef, callback, options?: IntersectionObserverInit) => {
    const observer = useRef<IntersectionObserver | undefined>(undefined)
 
    useEffect(() => {
-      const childrenElement = childRef.current
-      const options = {
-         root: parentRef.current,
-         rootMargin: '0px',
-         threshold: 0
+      
+      const parentElement = parentRef?.current || null
+      const childrenElement = childRef?.current || null
+
+      if(!parentElement && !childrenElement) return
+  
+
+      const rootOptions = {
+         ...options, 
      }
-     observer.current = new IntersectionObserver(([target]) => {
+     observer.current = new IntersectionObserver(([target], observer) => {
       if (target.isIntersecting){
-         console.log('intersecting')
          callback()
       }
-     }, options)
+     }, rootOptions)
 
-       observer.current.observe(childrenElement)
+       observer.current.observe(childrenElement!)
 
      return () => {
       
       if(observer.current){
-         observer.current.unobserve(childrenElement)
+         observer.current.unobserve(childrenElement!)
       }
 
      }
    }, [callback])
+
+
+   return observer.current
 }

@@ -1,0 +1,1 @@
+export const getLowerCaseValue = (value: string): string => value.toLocaleLowerCase()

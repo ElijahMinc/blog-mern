@@ -1,14 +1,14 @@
-import { Grid, Paper, Typography } from '@mui/material'
+import { Button, Grid, Paper, SelectChangeEvent, Typography } from '@mui/material'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { getTagsByPopularPostThunk, selectPost } from '../../../redux'
-import { AppDispatch } from '../../../redux/configureStore'
+import { getTagsByPopularPostThunk, selectPost } from '@redux/index'
+import { AppDispatch } from '@redux/configureStore'
+import { TagSelect } from '@Common/TagSelect/TagSelect'
+import { setTagsValue as setTags } from '@redux/Filter'
 
-interface SidebarProps {
+export const Sidebar: React.FC = () => {
+   const [tagsValue, setTagsValue] = React.useState<string[]>([]);
 
-}
-
-export const Sidebar: React.FC<SidebarProps> = () => {
       const {
             data:{
                   tags
@@ -20,48 +20,52 @@ export const Sidebar: React.FC<SidebarProps> = () => {
             dispatch(getTagsByPopularPostThunk())
       }, [])
 
+      const handleChange = (event: SelectChangeEvent<typeof tagsValue>) => {
+            const {
+              target: { value },
+            } = event;
+            setTagsValue(
+              typeof value === 'string' ? value.split(',') : value,
+            );
+            
+      };
 
+      const handleClearTags = () =>  setTagsValue([])
+
+      useEffect(() => {
+            dispatch(setTags(tagsValue))
+      }, [tagsValue])
 
    return (
-      <Grid container flexDirection="column" spacing={5}>
-          <Grid item> 
-            <Paper sx={{
-               padding: '15px',
-               width: '100%'
-            }} elevation={3}>
+      <Paper sx={{
+            padding: '15px'
+      }}>
+            <Typography variant="h5" sx={{ marginBottom: '20px'}}>Popular tags:</Typography>
 
-                  <Typography variant="h5" sx={{ marginBottom: '20px'}}>Popular tags:</Typography>
-                  <Grid container flexDirection="column" sx={{ marginLeft: '20px'}}>
-                        {!!tags?.length ? tags.map(tag => (
-                              <Grid key={`tag-#${tag}`} item>
-                                    <Typography paragraph>{`# ${tag}`}</Typography>
+
+            {!!tags?.length ? (
+                  <>
+                  <TagSelect tags={tags} value={tagsValue} handleChange={handleChange}/>
+                 {!!tagsValue.length  && (<Button onClick={handleClearTags} sx={{margin: '10px 0'}}>Clear</Button>)} 
+                  {!!tagsValue.length 
+                     && (
+                        <Grid container gap={3} justifyContent="space-evenly" alignItems="center">
+                              {tagsValue.map(tag => (
+                              <Grid item>
+                                    <Typography key={`tag-#${tag}`} paragraph>
+                                          {`# ${tag}`}
+                                    </Typography>
                               </Grid>
-                        )) : (
-                              <Typography paragraph>Популярных постов нет :)</Typography>
-                        )}
-                  </Grid>
-            </Paper>
-         </Grid>
-         {/* <Grid item>
-          <Paper sx={{
-               padding: '15px',
-               width: '100%'
-            }} elevation={3}>
+                              ))}
+                        </Grid>
+                       
+                     )}
+                  </>
+            ) : (
+                  <Typography paragraph>No popular tags</Typography>
+            )} 
 
-                  <Typography variant="h5" sx={{ marginBottom: '20px'}}>Popular comments: </Typography>
-                  <Grid container flexDirection="column" sx={{ marginLeft: '20px'}}>
-                     <Grid item>
-                           <Typography paragraph># React</Typography>
-                     </Grid>
-                     <Grid item>
-                           <Typography paragraph># Angular</Typography>
-                     </Grid>
-                     <Grid item>
-                           <Typography paragraph># Fronted</Typography>
-                     </Grid>
-                  </Grid>
-            </Paper>
-         </Grid> */}
-      </Grid>
+      </Paper>
+    
       )
 }

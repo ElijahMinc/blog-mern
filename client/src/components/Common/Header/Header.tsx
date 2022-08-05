@@ -1,36 +1,18 @@
 import { AccountCircle } from '@mui/icons-material';
-import { AppBar, Button, Grid, IconButton, Link, Menu, MenuItem, Toolbar, Typography, useTheme } from '@mui/material'
+import { AppBar, Button, Grid, IconButton, Menu, MenuItem, Toolbar, Typography, useTheme } from '@mui/material'
 import React, { ChangeEvent, useCallback, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory, useLocation } from 'react-router-dom';
-import { useCheckIsLoginPage } from '../../../hooks/useCheckIsLoginPage';
-import { deleteAvatarThunk, refreshAuth, resetPosts, selectUser, setAvatarThunk } from '../../../redux';
-import { AppDispatch } from '../../../redux/configureStore';
-import { makeStyles } from '@mui/styles'
-import { useCustomTheme } from '../../../context/Theme/ThemedProvider';
-
-
-const useStyles = makeStyles({
-   avatarWrapperImg: {
-      width: '35px',
-      height: '35px',
-      overflow: 'hidden',
-      borderRadius: '50%'
-   },
-   avatarImg: {
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover'
-   }
-})
-
-interface HeaderProps {
-
-}
+import { useHistory } from 'react-router-dom';
+import { useCheckIsLoginPage } from '@hooks/useCheckIsLoginPage';
+import { deleteAvatarThunk, refreshAuth, resetPosts, selectUser, setAvatarThunk } from '@redux/index';
+import { AppDispatch } from '@redux/configureStore';
+import { useCustomTheme } from '@context/Theme/ThemedProvider';
+import { useStyles } from './Header.styles';
 
 
 
-export const Header: React.FC<HeaderProps> = () => {
+
+export const Header: React.FC = () => {
    const [file, setFile] = useState<File | undefined>(undefined)
    const { handleToggleTheme } = useCustomTheme()
    const theme = useTheme()
@@ -41,14 +23,14 @@ export const Header: React.FC<HeaderProps> = () => {
 
    const { data: { 
       isAuth,
-      user: { firstname, lastname, avatar }
+      user: { firstname, lastname, cloudinaryAvatarUrl }
      }} = useSelector(selectUser)
    const dispatch = useDispatch<AppDispatch>()
  
    const { push } = useHistory()
    const isLoginPage = useCheckIsLoginPage()
 
-   const infoPage = isAuth ? 'Login Page' : 'Auth Page' 
+   const infoPage = isAuth ? `${firstname} ${lastname}` : 'Auth Page'
 
    const withAuthLoginText = isAuth ? 'Logout' : 'Login'
    const withNonAuthLoginText = isLoginPage ? 'Register' : 'Login'
@@ -81,28 +63,26 @@ export const Header: React.FC<HeaderProps> = () => {
     }
 
    return (
-         <AppBar position="relative" sx={{
+         <AppBar sx={{
             zIndex: '1000'
-         }} color="primary">
+         }} color="primary" position="fixed">
             <Toolbar >
                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   {infoPage}
                </Typography>
                   <Button sx={{
-                     marginRight: '10px'
-                  }} color="secondary" variant="contained" onClick={() => theme.palette.mode === 'light' ?  handleToggleTheme('dark') : handleToggleTheme('light') }>
-                     theme
-                  </Button>
-                  
+                           marginRight: '10px',
+                           // marginLeft: 'auto'
+
+                           }} color="secondary" variant="contained" onClick={() => theme.palette.mode === 'light' ?  handleToggleTheme('dark') : handleToggleTheme('light') }>
+                              theme
+                     </Button>
                {isAuth ? (
                      <Grid container sx={{
-                        width: 'auto'
+                        width: 'auto',
+                        marginLeft: 'auto'
                      }} alignItems="center">
-                        <Grid item>
-                           <Typography variant="h6" component="div">
-                                    <b>{firstname} {lastname}</b>
-                           </Typography>
-                        </Grid>
+
                         <Grid item>
                            <IconButton
                               size="large"
@@ -112,55 +92,55 @@ export const Header: React.FC<HeaderProps> = () => {
                               onClick={handleMenu}
                               color="inherit"
                            >
-                              {avatar ? <div className={styles.avatarWrapperImg}>
-                                    <img className={styles.avatarImg} src={`${process.env.REACT_APP_API_URL}/upload/${avatar}`} alt="" />
+                              {cloudinaryAvatarUrl ? <div className={styles.avatarWrapperImg}>
+                                    <img className={styles.avatarImg} src={cloudinaryAvatarUrl} alt="" />
                               </div> : (
                                     <AccountCircle />
                               )}  
                            </IconButton>
                         </Grid>
-                      
-                           <Menu
-                              id="menu-appbar"
-                              anchorEl={anchorEl}
-                              anchorOrigin={{
-                                 vertical: 'bottom',
-                                 horizontal: 'right',
-                              }}
-                              keepMounted
-                              transformOrigin={{
-                                 vertical: 'top',
-                                 horizontal: 'right',
-                              }}
-                              open={Boolean(anchorEl)}
-                              onClose={handleClose}
-                           >
-                           <MenuItem onClick={handleClose}>
-                              {avatar ? (
-                                 <Button variant="contained" color='secondary' onClick={removeAvatar}>
-                                    Remove Avatar
-                                 </Button>
-                              ) : (
-                                 <Button variant="contained" color='secondary' onClick={() => fileRef.current?.click()}>
-                                    Setup Avatar
-                                    <input ref={fileRef} type="file" accept="image/png, image/jpeg, 'image/jpg" multiple={false}  style={{display: 'none'}} onChange={setAvatar} />
-                                 </Button>
-                              )}
-                           </MenuItem>
-                           <MenuItem onClick={handleClose}>
-                              <Button variant="contained" color='secondary' onClick={() => {
-                                 dispatch(resetPosts())
-                                 push('/post', {
-                                 isEdit: false
-                              })}
-                              }>Create New Post!</Button>
-                           </MenuItem>
-                           <MenuItem onClick={handleClose}>
-                              <Button color="secondary" variant="contained"  onClick={logout}>
-                                 {withAuthLoginText}
+
+                        <Menu
+                           id="menu-appbar"
+                           anchorEl={anchorEl}
+                           anchorOrigin={{
+                              vertical: 'bottom',
+                              horizontal: 'right',
+                           }}
+                           keepMounted
+                           transformOrigin={{
+                              vertical: 'top',
+                              horizontal: 'right',
+                           }}
+                           open={Boolean(anchorEl)}
+                           onClose={handleClose}
+                        >
+                        <MenuItem onClick={handleClose}>
+                           {!!cloudinaryAvatarUrl ? (
+                              <Button variant="contained" color='secondary' onClick={removeAvatar}>
+                                 Remove Avatar
                               </Button>
-                           </MenuItem>
-                           </Menu>
+                           ) : (
+                              <Button variant="contained" color='secondary' onClick={() => fileRef.current?.click()}>
+                                 Setup Avatar
+                                 <input ref={fileRef} type="file" accept="image/png, image/jpeg, 'image/jpg" multiple={false}  style={{display: 'none'}} onChange={setAvatar} />
+                              </Button>
+                           )}
+                        </MenuItem>
+                        <MenuItem onClick={handleClose}>
+                           <Button variant="contained" color='secondary' onClick={() => {
+                              dispatch(resetPosts())
+                              push('/post', {
+                              isEdit: false
+                           })}
+                           }>Create New Post!</Button>
+                        </MenuItem>
+                        <MenuItem onClick={handleClose}>
+                           <Button color="secondary" variant="contained"  onClick={logout}>
+                              {withAuthLoginText}
+                           </Button>
+                        </MenuItem>
+                        </Menu>
                      </Grid>
                ) : (
                   <Button color="inherit" variant="text" onClick={redirectLoginOrRegisterPage}>

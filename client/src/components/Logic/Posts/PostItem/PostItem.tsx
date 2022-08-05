@@ -1,128 +1,30 @@
-import { Button, Card, CardActions, CardContent, CardMedia, Collapse, Grid, IconButton, IconButtonProps, Paper, Typography } from '@mui/material'
+import { Card, CardActions, CardContent, CardMedia, Collapse, Grid, IconButton, IconButtonProps, Typography } from '@mui/material'
 import moment from 'moment'
-import React, { useCallback, useLayoutEffect, useState } from 'react'
-import { deletePostThunk, likePostThunk, Post as PostInterface, selectUser } from '../../../redux'
-import {styled} from '@mui/material/styles'
+import React, { useCallback, useEffect, useState } from 'react'
+import { deletePostThunk, likePostThunk, Post as PostInterface, selectFilter, selectUser } from '@redux/index'
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { makeStyles } from '@mui/styles';
-import notFoundImage from '../../../static/notFoundImage.png'
+import notFoundImage from '@static/notFoundImage.png'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux'
 import blue from '@mui/material/colors/blue'
 import { useHistory } from 'react-router-dom'
-import { AppDispatch } from '../../../redux/configureStore'
-import { TextArea } from '../../Common/TextArea/TextArea'
-import { convertToHTML } from 'draft-convert'
+import { AppDispatch } from '@redux/configureStore'
 import { ContentState, EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import htmlToDraft from 'html-to-draftjs';
-
-export interface ExpandMoreProps extends IconButtonProps {
-   expand: boolean;
- }
- export interface LikeProps extends IconButtonProps {
-   like: boolean;
- }
-
-export const ExpandMore = styled((props: ExpandMoreProps) => {
-   const { expand, ...other } = props;
-
-   return <IconButton {...other} />;
- })(({ theme, expand }) => ({
-   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-   marginLeft: 'auto',
-   transition: theme.transitions.create('transform', {
-     duration: theme.transitions.duration.shortest,
-   }),
- }));
- 
-export const Like = styled((props: LikeProps) => {
-   const { like, ...other } = props;
-
-   return (
-          <IconButton {...other} />
-   )
- })(({ theme, like }) => ({
-   color: like ? theme.palette.error['light']  : theme.palette.grey['300']
-   ,
- })); 
+import { ExpandMore } from '@/components/Common/ExpandMore/ExpandMore';
+import { Like } from '@/components/Common/Like/Like';
+import { useStyles } from './PostItem.styles';
 
 
-const useStyles = makeStyles({
-   cardContent: {
-      paddingTop: '10px',
-      paddingBottom: '5px',
-   },
-   cardContentHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-   },
-   cardContentLogo: {
-      position: 'relative',
-      width: '30px',
-      height: '30px',
-      borderRadius: '50%',
-      overflow: 'hidden'
-   },
-   cardContentImg: {
-      width: '100%',
-      height: '100%'
-   },
-   cardContentMedia: {
-      cursor: 'pointer',
-      maxWidth: '100%',
-      borderRadius: '10px'
-   },
-   cardContentInfo: {
-      display: 'flex',
-      flexDirection: 'column'
-
-   },
-   cardContentBody: {
-      marginTop: '10px',
-      marginLeft: '40px'
-   },
-   cardContentTags: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '20px'
-   },
-   cardMediaContainer: {
-      position: 'relative',
-      width: '100%',
-      height: '600px',
-      padding: '20px'
-   },
-   cardMediaEdit: {
-      position: 'absolute',
-      top:'25px',
-      right: '70px',
-      cursor: 'pointer',
-      transition: '.3s all !important',
-      '&:hover': {
-         transform: 'translateY(-5px) rotate(8deg)'
-      }
-   },
-   cardMediaRemove: {
-      position: 'absolute',
-      top:'25px',
-      right: '20px',
-      cursor: 'pointer',
-      transition: '.3s all !important',
-      '&:hover': {
-         transform: 'translateY(-5px) rotate(8deg)'
-      }
-   },
-})
 
 interface PostProps {
    post: PostInterface
 }
 
-export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageName, userId: userIdPost, tags, updatedAt, createdAt, userInfo: {firstname, lastname, avatar},  likes: {likes, userIds}} }) => {
+export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, cloudinaryId, cloudinaryUrl, userId: userIdPost, tags, updatedAt, createdAt, userInfo: {firstname, lastname, cloudinaryAvatarUrl},  likes: {likes, userIds}} }) => {
    const {
       data: {
          user: {
@@ -130,6 +32,8 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
          }
       }
    } = useSelector(selectUser)
+   const filters = useSelector(selectFilter)
+
 
    const isLikedStatus = userIds.indexOf(authUserId) !== -1
 
@@ -153,18 +57,22 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
    const handleRedirectToEditPost = useCallback(() => push(`post/edit/${_id}`, {
       isEdit: true
    }), [_id])
+
    const handleRedirectToPost = useCallback(() => push(`post/${_id}`), [_id])
-   const handleDeletePost =  useCallback(() => dispatch(deletePostThunk(_id)), [_id])
+   const handleDeletePost =  useCallback(() => dispatch(deletePostThunk({_id, filters})), [_id])
 
-
-   const contentBlock = htmlToDraft(text as string);
-
-   const [editorState] = useState(
-      contentBlock ? 
-         EditorState.createWithContent(ContentState.createFromBlockArray(contentBlock.contentBlocks)) 
-      : 
+   const [editorState, setEditorState] = useState<EditorState>(
          () => EditorState.createEmpty()
       )
+
+      useEffect(() => {
+         const contentBlock = htmlToDraft(text as string);
+
+         setEditorState( contentBlock ? 
+            EditorState.createWithContent(ContentState.createFromBlockArray(contentBlock.contentBlocks)) 
+         : 
+            () => EditorState.createEmpty())
+      }, [text])
 
    return  (
        <Grid item >
@@ -180,8 +88,8 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                   component="img"
                   className={classes.cardContentMedia}
                   height="100%"
-                  image={imageName ? `${process.env.REACT_APP_API_URL}/upload/${imageName}` : notFoundImage}
-                  alt={imageName ?? ''}
+                  image={cloudinaryUrl ? cloudinaryUrl : notFoundImage}
+                  alt={cloudinaryId ?? ''}
                />
                {isAuthor && (
                   <>
@@ -194,7 +102,7 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
             <CardContent className={classes.cardContent}>
                <div className={classes.cardContentHeader}>
                   <div className={classes.cardContentLogo} >
-                     <img className={classes.cardContentImg} src={avatar ? `${process.env.REACT_APP_API_URL}/upload/${avatar}` : notFoundImage} alt={avatar ?? ''} />
+                     <img className={classes.cardContentImg} src={cloudinaryAvatarUrl ? cloudinaryAvatarUrl : notFoundImage} alt={cloudinaryAvatarUrl ?? ''} />
                   </div>
                   <div className={classes.cardContentInfo} >
                      <Grid item container spacing={1} alignItems="center">
@@ -219,6 +127,7 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                   <Grid 
                      container
                      spacing={0}
+                     gap={1}
                      color="primary"
                      sx={{
                         marginLeft: '5px',
@@ -231,7 +140,6 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                      }}>
                         {!!tags?.length && tags.map((tag) => (
                            <Grid key={`tag-${tag}`} item sx={{
-                              marginLeft: '10px',
                               position: 'relative',
                               color: 'white'
 
@@ -250,18 +158,13 @@ export const PostItem: React.FC<PostProps> = ({ post: {_id, title, text, imageNa
                         <FavoriteIcon/>
                      </Like>
                      {likesCount}
-                  {/* <IconButton aria-label="share">
-                     <ShareIcon />
-                  </IconButton> */}
                   <ExpandMore
                      expand={expanded}
                      onClick={handleExpandClick}
                      aria-expanded={expanded}
                      aria-label="show more"
                   >
-
                         <ExpandMoreIcon />
-                  
                   </ExpandMore>
                </CardActions>
                <Collapse in={expanded} timeout="auto" unmountOnExit>

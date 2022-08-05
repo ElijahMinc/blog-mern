@@ -1,11 +1,11 @@
-import { Action, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { FormDefaultValuesPost } from "../../components/Logic/Posts/Post.interface"
-import { TabValue } from "../../pages/Home"
+import { FormDefaultValuesPost } from "../../components/Logic/Posts/types/Post.interface"
 import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
 import { BaseInitState } from "../../types/global.types"
 import { RootState } from "../configureStore"
+import { InitialStateFilter, TabValue } from "../Filter"
 import { setToast } from "../Toast"
 
 export interface Likes {
@@ -21,14 +21,16 @@ export interface Post {
    userId: string
    // mongoose.Schema.Types.ObjectId
    tags?: string[]
-   imageName?: string | null
-   userInfo: Pick<AuthFormDefaultValues, 'firstname' | 'lastname'> & {avatar: string | null}
+   cloudinaryId?: string | null
+   cloudinaryUrl?: string | null
+   userInfo: Pick<AuthFormDefaultValues, 'firstname' | 'lastname'> & {cloudinaryAvatarUrl: string | null}
    createdAt: Date
    updatedAt: Date
    likes: Likes
 }
 
 interface InitialStatePost {
+    total: number
    posts: Post[] | null
    tags: Post['tags']
 }
@@ -37,13 +39,14 @@ interface InitialStatePost {
 const initialState: BaseInitState<InitialStatePost> = {
   data: {
    posts: null,
+   total: 0,
    tags: []
   },
-  isFetching: false,
+  isFetching: true,
   error: ''
 }
 
-export const getPostThunk = createAsyncThunk<Post[], {typeTab: TabValue, id?: string}, {rejectValue: string }>('post/get', async ({typeTab, id}, { dispatch, rejectWithValue }) => {
+export const getPostThunk = createAsyncThunk<{ posts:Post[], total: number}, {typeTab?: TabValue, tags?:string[], id?: string, page?: number, limit?: number, searchValue?: string}, {rejectValue: string }>('post/get', async ({typeTab, id, page = undefined, searchValue = '', tags = []}, { dispatch, rejectWithValue }) => {
     try {
 
       let url = `${process.env.REACT_APP_API_URL}/post`
@@ -60,6 +63,16 @@ export const getPostThunk = createAsyncThunk<Post[], {typeTab: TabValue, id?: st
         default:
           break;
       }
+
+      if(!!page) url += `?page=${page}`
+
+      if(!!searchValue) url += `${!page ? '?' : '&'}searchValue=${searchValue}`
+
+      if(!!tags.length) url += tags.reduce((prevValue, currentValue, idx) => {
+          if(tags.length - 1 !== idx)  return prevValue + `tags=${currentValue}&`
+
+          return prevValue + `tags=${currentValue}`
+      },  !page && !searchValue ? '?' : '&')
 
       const request = await axios.get(url, {
          headers: {
@@ -163,6 +176,7 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
 
     const request = await axios.put(url, formData, {
        headers: {
+          'Content-Type': `multipart/form-data;`,
           'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
         }
     })
@@ -211,13 +225,17 @@ export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string
   }
 })
 
-export const deletePostThunk = createAsyncThunk<{ posts: Post[], message: string }, string, {rejectValue: string }>('post/delete', async (_id, { dispatch, rejectWithValue }) => {
+export const deletePostThunk = createAsyncThunk<{ posts: Post[], message: string, total: number }, {_id: string, filters: InitialStateFilter }, {rejectValue: string }>('post/delete', async ({_id, filters}, { dispatch, rejectWithValue }) => {
   try {
-    const formData = new FormData()
-    formData.append('_id', _id)
 
-    const request = await axios.delete(`${process.env.REACT_APP_API_URL}/post`, {
-       data: formData,
+    let url = `${process.env.REACT_APP_API_URL}/post/${_id}`
+
+    if(!!filters.page) url += `?page=${filters.page}`
+
+    if(!!filters.searchValue) url += `${!filters.page ? '?' : '&'}searchValue=${filters.searchValue}`
+
+
+    const request = await axios.delete(url, {
        headers: {
           'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
         }
@@ -243,12 +261,13 @@ export const postSlice = createSlice({
   reducers: {
     resetPosts(state){
       state.data.posts = null
-    }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getPostThunk.fulfilled, (state, action) => {
+      state.data.posts = action.payload.posts
+      state.data.total = action.payload.total
       state.isFetching = false
-      state.data.posts = action.payload
 
     })
     builder.addCase(getPostThunk.pending, (state, _) => {
@@ -281,20 +300,14 @@ export const postSlice = createSlice({
       state.error = action.payload || ''
     })
 
-    builder.addCase(likePostThunk.fulfilled, (state, action) => {
-      // state.data.posts = state.data.posts
-      // state.isFetching = false
-    })
-    builder.addCase(likePostThunk.pending, (state, _) => {
-      // state.isFetching = true
-    })
     builder.addCase(likePostThunk.rejected, (state, action) => {
-      // state.isFetching = false
       state.error = action.payload || ''
     })
 
     builder.addCase(deletePostThunk.fulfilled, (state, action) => {
+      // state.data.posts = (state.data?.posts ?? []).filter(post => post._id !== action.payload._id)
       state.data.posts = action.payload.posts
+      state.data.total = action.payload.total
       state.isFetching = false
     })
     builder.addCase(deletePostThunk.pending, (state, _) => {
@@ -321,5 +334,20 @@ export const postSlice = createSlice({
 })
 
 export const { resetPosts } = postSlice.actions
+
 export const postReducer = postSlice.reducer
+
 export const selectPost = (state: RootState) => state.posts
+
+export const selectIsAllFetching = (state: RootState) => {
+  const {
+    data: {
+      posts,
+    },
+    isFetching
+  } = state.posts
+
+  const isAllFetching = !Array.isArray(posts) || isFetching
+
+  return isAllFetching
+}

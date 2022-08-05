@@ -1,39 +1,44 @@
-import { Card, CardContent, CardHeader, Skeleton } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect} from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { TabValue } from '../../../pages/Home'
-import { selectUser } from '../../../redux'
-import { AppDispatch } from '../../../redux/configureStore'
-import { getPostThunk, Post, selectPost } from '../../../redux/Post/PostSlice'
-import { Loader } from '../../Common/Loader/Loader'
-
-
+import { AppDispatch } from '@redux/configureStore'
+import { getPostThunk, Post, selectIsAllFetching, selectPost } from '@redux/Post/PostSlice'
+import { Loader } from '@Common/Loader/Loader'
+import { selectFilter, TabValue } from '@/redux'
 
 interface LaunchPostsProps {
    tabValue: TabValue
-   id?: string
    allPosts: boolean
-   children: (posts:  Post[] ) => JSX.Element
+   children: (posts:  Post[]) => JSX.Element
+
+   id?: string
+   page?: number
 }
 
-export const LaunchPosts: React.FC<LaunchPostsProps> = ({ tabValue, allPosts, children, id }) => {
+export const LaunchPosts: React.FC<LaunchPostsProps> = ({ tabValue, allPosts, children, id, page = undefined}) => {
 
    const {
       data: { 
          posts
-      },
-      isFetching
+      }
    } = useSelector(selectPost)
 
-   
+   const isAllFetching = useSelector(selectIsAllFetching)
+   const { searchValue, tagValues: tags } = useSelector(selectFilter)
+
    const dispatch = useDispatch<AppDispatch>()
 
    useEffect(() => {
       const postThunkParameters: {
          id?: string
-         typeTab: TabValue
+         typeTab: TabValue,
+         page?: number,
+         searchValue?: string,
+         tags?: string[]
       } = {
-         typeTab: tabValue
+         typeTab: tabValue,
+         page,
+         searchValue,
+         tags
       }
 
       if(tabValue === TabValue.CHOSEN_POST && !allPosts){
@@ -42,11 +47,7 @@ export const LaunchPosts: React.FC<LaunchPostsProps> = ({ tabValue, allPosts, ch
 
       dispatch(getPostThunk(postThunkParameters))
 
-   }, [])
+   }, [page, searchValue, tags])
 
-   return isFetching 
-   ? 
-   <Loader/>
- : 
- children((posts || [] as Post[]))
+   return isAllFetching ?  <Loader/> : children((posts as Post[]))   
 }

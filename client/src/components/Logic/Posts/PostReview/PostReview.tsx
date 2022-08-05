@@ -1,109 +1,28 @@
 import {Button, Card, CardActions, CardContent, CardMedia, Collapse, Grid, TextField, Typography } from '@mui/material'
-import { makeStyles } from '@mui/styles'
 import moment from 'moment'
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
-import { createPostThunk, editPostThunk, likePostThunk, Post, selectPost, selectUser } from '../../../redux'
-import notFoundImage from '../../../static/notFoundImage.png'
+import { createPostThunk, editPostThunk, likePostThunk, Post, selectPost, selectUser } from '@redux/index'
+import notFoundImage from '@static/notFoundImage.png'
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ExpandMore, Like } from './PostItem'
 import {  useForm } from 'react-hook-form'
-import { ThemedInput } from '../../Common/ThemedInput/ThemedInput'
-import { getFormRules } from '../../../utils/formRules'
-import { TextArea } from '../../Common/TextArea/TextArea'
-import { defaultValuesPost, FormDefaultValuesPost } from './Post.interface'
+import { ThemedInput } from '@Common/ThemedInput/ThemedInput'
+import { getFormRules } from '@utils/formRules'
+import { TextArea } from '@Common/TextArea/TextArea'
+import { defaultValuesPost, FormDefaultValuesPost } from '../types/Post.interface'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch } from '../../../redux/configureStore'
+import { AppDispatch } from '@redux/configureStore'
 import { useHistory } from 'react-router-dom'
-import { v4 as uuidv4 } from 'uuid';
 import CloseIcon from '@mui/icons-material/Close';
-import { Comments } from '../Comments/Comments'
-
-const useStyles = makeStyles({
-   cardContent: {
-      paddingTop: '10px',
-      paddingBottom: '5px',
-   },
-   cardContentHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-   },
-   cardContentLogo: {
-      position: 'relative',
-      width: '30px',
-      height: '30px',
-      borderRadius: '50%',
-      overflow: 'hidden'
-   },
-   cardContentImg: {
-      width: '100%',
-      height: '100%'
-      // position: 'absolute',
-      // top: '0',
-      // left: '0',
-      // objectFit: 'cover'
-   },
-   cardContentMedia: {
-      // borderBottomRightRadius: '15px',
-      // borderBottomLeftRadius: '15px',
-      overflow: 'hidden'
-   },
-   cardContentInfo: {
-      display: 'flex',
-      flexDirection: 'column'
-
-   },
-   cardContentBody: {
-      marginTop: '10px',
-      marginLeft: '40px'
-   },
-   cardContentTags: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '20px'
-   },
-   cardMediaContainer: {
-      position: 'relative'
-   },
-   cardMediaEdit: {
-      position: 'absolute',
-      top:'10px',
-      right: '50px',
-      cursor: 'pointer'
-   },
-   cardMediaRemove: {
-      position: 'absolute',
-      top:'10px',
-      right: '10px',
-      cursor: 'pointer'
-
-   },
-   btnBack: {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '50px',
-      height: '100%',
-      zIndex: '1'
-   },
-   imgPreview: {
-      maxWidth: '100%',
-      height: '300px',
-      display: 'block',
-      borderRadius: '10px',
-      margin: '0 auto',
-      marginBottom: '10px'
-   },
-   inputTitle: {
-         fontSize: '30px'
-   }
-})
-
-const getTransformTags = (tags: string[]) => {
-   if(!tags.length) return []
-   return tags.map(tag => ({id: uuidv4(), title: tag}))
-}
+import { Comments } from '@/components/Logic/Comments/Comments/Comments'
+import { getTrimValue } from '@/utils/getTrimValue'
+import { getLowerCaseValue } from '@/utils/getLowerCaseValue'
+import { getMaxLengthStr } from '@/utils/getMaxLengthStr'
+import { Like } from '@Common/Like/Like'
+import { ExpandMore } from '@Common/ExpandMore/ExpandMore'
+import { useStyles } from './PostReview.styles'
+import { getTransformTags, TransformedTagsInterface } from '@/utils/getTransformTags'
+import { v4 as uuidv4 } from 'uuid';
 
 interface PostReviewProps {
    post: Post | null
@@ -119,7 +38,7 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
       }
    } = useSelector(selectUser)
 
-   const [ tags, setTags] = useState<any[]>(!!post?.tags?.length ? getTransformTags(post.tags) : [])
+   const [ tags, setTags] = useState<TransformedTagsInterface[]>(!!post?.tags?.length ? getTransformTags(post.tags) : [])
    const [ tagValue, setTagValue] = useState('')
 
    const isLikedStatus = post?.likes?.userIds.indexOf(authUserId) !== -1
@@ -143,12 +62,12 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
 
 
    const imageUrl = 
-         post?.imageName 
-            ? `${process.env.REACT_APP_API_URL}/upload/${post?.imageName}` 
+         !!post?.cloudinaryUrl 
+            ? post?.cloudinaryUrl  
             : notFoundImage
    const authorImageUrl = 
-         post?.userInfo?.avatar 
-               ? `${process.env.REACT_APP_API_URL}/upload/${post?.userInfo?.avatar }` 
+         post?.userInfo?.cloudinaryAvatarUrl 
+               ? post?.userInfo?.cloudinaryAvatarUrl
                : notFoundImage
 
    const handleLikeClick =  async () =>  {
@@ -182,25 +101,28 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
    }
 
    const onSubmitHandle = async (data: FormDefaultValuesPost) => {
+
       if(isEdit){
-         post && await dispatch(editPostThunk({...data, _id: post._id}))
+         if(!post) return
+
+         await dispatch(editPostThunk({...data, _id: post._id}))
+
       }else{
          await dispatch(createPostThunk(data))
       }
 
-  
-      push('/home')
-     
+      push(`/home`)
+
    }
 
    useEffect(() => {
-      if(post){
+      if(!!post){
          reset({
             title: post?.title || '',
             text: post?.text || '',
             tags: post?.tags || [],
          })
-         if(post?.imageName){
+         if(post?.cloudinaryId){
             setPreview(imageUrl)
          }
       }
@@ -216,7 +138,7 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
    return (
       <Grid container spacing={4} flexDirection="column">
          <Grid item flexGrow={1}>
-            {isNewPost && <Typography variant='h3' textAlign='center' marginBottom={3}>New Post</Typography>}
+            {isNewPost && <Typography variant='h3' textAlign='center' marginBottom={3}>{isEdit ? 'Edit Post' : 'New Post'}</Typography>}
             <Card variant="outlined" sx={{padding: '20px'}} style={{
                overflow:'visible',
                boxShadow: '0px 0px 5px 0px rgb(63 81 181)',
@@ -298,7 +220,7 @@ export const PostReview: React.FC<PostReviewProps> = ({ post, isEdit }) => {
                                  <Grid item flexGrow={2}>
                                     <TextField  
                                        value={tagValue}
-                                       onChange={(e) => setTagValue(e.target.value)}
+                                       onChange={(e) => setTagValue(getMaxLengthStr(getLowerCaseValue(getTrimValue(e.target.value)), 10))}
                                        variant='standard' 
                                        fullWidth label="Enter your tags"
                                        placeholder='Enter Your tags'

@@ -1,8 +1,7 @@
 import { Action, AnyAction, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { FormDefaultValuesPost } from "../../components/Logic/Posts/Post.interface"
-import { TabValue } from "../../pages/Home"
+import { FormDefaultValuesPost } from "../../components/Logic/Posts/types/Post.interface"
 import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
 import { BaseInitState } from "../../types/global.types"
 import { RootState } from "../configureStore"
@@ -15,7 +14,7 @@ export interface Comment {
    text: string
    userId: string
    postId: string
-   userInfo: Pick<AuthFormDefaultValues, 'firstname' | 'lastname'> & {avatar: string | null}
+   userInfo: Pick<AuthFormDefaultValues, 'firstname' | 'lastname'> & {cloudinaryAvatarUrl: string | null}
    createdAt: Date
    updatedAt: Date
 }
@@ -93,6 +92,7 @@ export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {reject
 
     const request = await axios.post(url, formData, {
        headers: {
+          'Content-Type': `multipart/form-data;`,
           'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
         }
     })

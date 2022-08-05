@@ -1,7 +1,7 @@
 import { Grid } from '@mui/material'
 import React from 'react'
-import { Comment } from '../../../redux'
-import { CommentsItem } from './CommentsItem'
+import { Comment } from '@redux/index'
+import { CommentsItem } from '@Logic/Comments/CommentsItem/CommentsItem'
 
 interface CommentsListProps {
    comments: Comment[]

@@ -1,29 +1,23 @@
-import React, { useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React from 'react'
 import { Redirect, Route, Switch } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
-import { Layout } from '../../../pages/Layout'
-import { refreshAuth, selectUser, setToken, userThunk } from '../../../redux'
-import { AppDispatch } from '../../../redux/configureStore'
 import { privateRoutes, publicRoutes } from '../../../routes/routes'
-import { LocalStorageKeys, LocalStorageService } from '../../../service/LocalStorageService'
+import { Loader } from '../Loader/Loader'
 
-interface AppRouterProps {
-
-}
-
-export const AppRouter: React.FC<AppRouterProps> = () => {
-  const { isAuth } = useAuth()
+export const AppRouter: React.FC = () => {
+  const { isAuth, isAuthFetching } = useAuth()
 
    return isAuth ? (
-           <Layout>
-              <Switch>
+            isAuthFetching ? (
+               <Loader/> 
+            ) : (
+            <Switch>
                 {privateRoutes.map(privateRoute => (
-                    <Route key={`route-${privateRoute.path}`} {...privateRoute}  />
+                <Route key={`route-${privateRoute.path}`} {...privateRoute}  />
                 ))}
                 <Redirect to="/home" />
-              </Switch>
-           </Layout>
+            </Switch>
+            )
          )
           : (
            <Switch>
@@ -31,6 +25,6 @@ export const AppRouter: React.FC<AppRouterProps> = () => {
                  <Route key={`route-${publicRoute.path}`} {...publicRoute} />
                ))}
            <Redirect to="/login" />
-       </Switch>
+        </Switch>
       )
 }

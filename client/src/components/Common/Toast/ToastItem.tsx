@@ -1,10 +1,10 @@
 import { Alert } from '@mui/material'
-import React, { MouseEvent, useEffect, useRef, useState } from 'react'
+import React, {  useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { removeToast, ToastInterface } from '../../../redux'
+import { removeToast, ToastInterface } from '@redux/index'
 import { makeStyles } from '@mui/styles'
-import { useHover } from '../../../hooks/useHover'
-import { useSkipFirstMount } from '../../../hooks/useSkipFirstMount'
+import { useHover } from '@hooks/useHover'
+import { useSkipFirstMount } from '@hooks/useSkipFirstMount'
 
 const useStyles = makeStyles({
    toastItem: {

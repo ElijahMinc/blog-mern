@@ -1,14 +1,14 @@
-import { Action, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
-import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
-import { BaseInitState } from "../../types/global.types"
-import { AppDispatch, RootState } from "../configureStore"
-import { setToast } from "../Toast"
+import { AuthFormDefaultValues } from "@components/Common/Form/AuthForm/types"
+import { LocalStorageKeys, LocalStorageService } from "@service/LocalStorageService"
+import { BaseInitState } from "@typesModule/global.types"
+import { setToast } from "@redux/Toast"
+import { RootState } from "@redux/configureStore"
 
 interface InitialStateUser {
   isAuth: boolean
-  user: AuthFormDefaultValues & {_id: string, avatar?: string}
+  user: AuthFormDefaultValues & {_id: string, cloudinaryAvatarUrl: string | null}
   token: string | null
 }
 
@@ -21,7 +21,8 @@ const initialState: BaseInitState<InitialStateUser> & { isFetchingAuth: boolean 
       firstname: '',
       lastname: '',
       password: '',
-      email: ''
+      email: '',
+      cloudinaryAvatarUrl: null
     },
     token: null
   },
@@ -59,7 +60,7 @@ export const registerThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, 
 
     return response
   } catch (err) {
-    console.log(err)
+
     let error: string = 'Error'
 
     if(typeof err === 'string') error = err

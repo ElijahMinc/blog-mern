@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { selectUser, setToken } from "../redux"
-import { AppDispatch } from "../redux/configureStore"
-import { LocalStorageKeys, LocalStorageService } from "../service/LocalStorageService"
+import { selectUser, setToken } from "@redux/index"
+import { AppDispatch } from "@redux/configureStore"
+import { LocalStorageKeys, LocalStorageService } from "@service/LocalStorageService"
 
 interface HookAuthDataReturned {
    isAuth: boolean

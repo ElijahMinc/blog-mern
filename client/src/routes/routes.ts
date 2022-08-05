@@ -1,7 +1,7 @@
 import { RouteProps } from "react-router-dom";
-import { AuthForm } from "../components/Common/Form/AuthForm/AuthForm";
-import { Home } from "../pages/Home";
-import { Post } from "../pages/Post";
+import { AuthForm } from "@components/Common/Form/AuthForm/AuthForm";
+import { Home } from "@pages/Home";
+import { Post } from "@pages/Post";
 
 export const publicRoutes: RouteProps[] = [
    {
