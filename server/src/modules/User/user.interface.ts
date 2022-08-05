@@ -3,5 +3,6 @@ export interface UserInterface {
    lastname: string
    email: string
    password: string
-   avatar?: string | null
+   cloudinaryAvatarUrl: string | null
+   cloudinaryAvatarId: string | null
 }

@@ -1,30 +1,69 @@
-import { UploadedFile } from "express-fileupload";
 import { Document, FilterQuery, HydratedDocument, Schema, Types, UpdateQuery } from "mongoose";
 import Post from "../modules/Post/Post";
 import { HydratedPostInterface, PostInterface } from "../modules/Post/post.interface";
 import User from "../modules/User/User";
 import { UserInterface } from "../modules/User/user.interface";
+import { PostQueryParams } from "../types/global.interface";
+import { shuffle } from "../utils/shuffle";
 
 class PostService {
    popularPosts: number =  1
  
-   async uploadFile(){
- 
+   pageOptions: { page: number, limit: number, sort: 'asc' | 'desc', searchValue: string } = {
+      page: 0,
+      limit: 3,
+      sort: 'desc',
+      searchValue: ''
    }
 
-   async getAll(){
-      const posts = await Post.find()
-      return posts
+   async getAll(query?: {page: string, searchValue?: string, tags?: string[] | string}){
+      const page = query ? +query.page : this.pageOptions.page
+
+      const queryParams: PostQueryParams = {} as PostQueryParams
+
+      if(!!query?.searchValue) {
+         queryParams.$text = { $search: query.searchValue, $diacriticSensitive: true }
+       }
+
+       if(!!query?.tags) {
+         queryParams.tags = { $in: typeof query.tags === 'string' ? [query.tags] : query.tags }
+       }
+
+      const posts = await Post.find(queryParams)
+            .sort({ updatedAt: this.pageOptions.sort })
+            .skip(page * this.pageOptions.limit)
+            .limit(this.pageOptions.limit)
+
+      const countPosts = await Post.find(queryParams)
+               .count()
+      return {total: countPosts, posts}
    }
 
-   async getPopular(){
-      const posts = await Post.find({ 'likes.likes': {$gte: this.popularPosts } })
-      return posts
+   async getPopular(query?: {page: string, searchValue?: string }){
+      const page = query ? +query.page : this.pageOptions.page
+
+      const queryParams: PostQueryParams = {} as PostQueryParams
+
+      if(!!query?.searchValue) {
+         queryParams.$text = { $search: query.searchValue, $diacriticSensitive: true }
+       }
+
+      const posts = await Post.find({ ...queryParams, 'likes.likes': {$gte: this.popularPosts } })
+            .sort({ updatedAt: this.pageOptions.sort })
+            .skip(page * this.pageOptions.limit)
+            .limit(this.pageOptions.limit)
+
+      const countPosts = await Post.find({ ...queryParams, 'likes.likes': {$gte: this.popularPosts } })
+                  .count()
+
+      return {total: countPosts, posts}
    }
 
    async getTagsByPopular(){
+      const offset = 5
       const posts = await Post.find({ 'likes.likes': {$gte: this.popularPosts } })
-      const tags = posts.map(post => post.tags).flat()
+      const tags = shuffle(posts.map(post => post.tags).flat()).slice(0, offset)
+      
       return tags
    }
 
@@ -40,10 +79,10 @@ class PostService {
       return postsByUserId
    }
 // userInfo: PostInterface['userInfo']
-   async updateManyAvatarByUserId(userId: Types.ObjectId | string | undefined, avatar: string | null | undefined ){
+   async updateManyAvatarByUserId(userId: Types.ObjectId | string | undefined, cloudinaryAvatarUrl: string | null | undefined ){
 
       // const postsByUserId = await Post.updateMany({ userId: {$all: userId } }, {$set: { userInfo }} )
-      const postsByUserId = await Post.updateMany({ userId: {$all: userId } }, {$set: { 'userInfo.avatar': avatar }} )
+      const postsByUserId = await Post.updateMany({ userId: {$all: userId } }, {$set: { 'userInfo.cloudinaryAvatarUrl': cloudinaryAvatarUrl }} )
 
       if(!postsByUserId) throw new Error("Таких постов нет")
       return postsByUserId

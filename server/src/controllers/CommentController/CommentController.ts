@@ -44,6 +44,7 @@ export class CommentController {
    async createComment(req: AuthRequest, res: Response) {
       try {
          const { postId, userId, text } = req.body as RequestBodyComments
+
          const post = await PostService.getById(postId)
          const user = await UserService.getById(userId)
 
@@ -53,7 +54,7 @@ export class CommentController {
             userInfo: {
                firstname: user.firstname,
                lastname: user.lastname,
-               avatar: user?.avatar || null
+               cloudinaryAvatarUrl: user?.cloudinaryAvatarUrl ?? null
             },
             text
          }
@@ -63,7 +64,7 @@ export class CommentController {
          return res.status(200).json(newComment)
          
       } catch (e) {
-         console.log(e)
+
          return res.status(400).json({
             message: 'Faild with get'
          })

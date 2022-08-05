@@ -1,17 +1,13 @@
-import { ParamsDictionary } from 'express-serve-static-core';
 import { Response } from "express";
 import { AuthRequest } from "../../types/global.interface";
 import PostService from "../../services/PostService";
 import { HydratedPostInterface, PostInterface, RequestPostBody } from "../../modules/Post/post.interface";
-import Post from "../../modules/Post/Post";
-import fs from 'fs'
-import path from 'path'
-import { UploadedFile } from "express-fileupload";
-import { v4 as uuidv4 } from 'uuid'
 import UserService from "../../services/UserService";
 import mongoose, { HydratedDocument, ObjectId } from "mongoose";
 import { UserInterface } from "../../modules/User/user.interface";
 import CommentService from '../../services/CommentService';
+import cloudinary from '../../utils/cloudinary'
+
 
 export class PostController {
 
@@ -24,11 +20,12 @@ export class PostController {
    getAllPostUrl: string = '/post'
    createPostUrl: string = '/post'
    updatePostUrl: string = '/post'
-   deletePostUrl: string = '/post'
+   deletePostUrl: string = '/post/:id'
 
-   async getAll(_: AuthRequest, res: Response) {
+   async getAll(req: AuthRequest, res: Response) {
       try {
-         const posts = await PostService.getAll()
+         const query = req.query as {page: string, searchValue?: string}
+         const posts = await PostService.getAll(query)
 
          return res.status(200).json(posts)
       } catch (e) {
@@ -45,18 +42,20 @@ export class PostController {
          const post = await PostService.getById(_id)
          if(Array.isArray(post)) return res.status(200).json(post)
 
-         return res.status(200).json([post])
+         return res.status(200).json({ posts: [post] })
       } catch (e) {
-         console.log('e', e)
+
          return res.status(400).json({
             message: 'Faild with get'
          })
       }
    }
 
-   async getPopular(_: AuthRequest, res: Response) {
+   async getPopular(req: AuthRequest, res: Response) {
       try {
-         const posts = await PostService.getPopular()
+         const query = req.query as { page: string }
+
+         const posts = await PostService.getPopular(query)
 
          return res.status(200).json(posts)
       } catch (e) {
@@ -131,50 +130,57 @@ export class PostController {
       try {
          const { text, title, ...rest } = req.body as RequestPostBody
          const tagNames = rest.tags as string[]
-         const image = req?.files?.image as UploadedFile | undefined
-         const defaultPath = path.resolve(__dirname, '../../static/')
-         let generatedNameImg: string | undefined = undefined
+         const image = req?.file 
+
          const user = await UserService.getById(req.userId) as HydratedDocument<UserInterface>
  
+         if(image && image?.size >= 524288){
+            return res.status(400).json({
+               message: 'File is very big!'
+            })
+         }
+
          const post: PostInterface = {
             text,
             title,
             userInfo: {
                firstname: user.firstname,
                lastname: user.lastname,
-               avatar: user?.avatar || null
+               cloudinaryAvatarUrl: user?.cloudinaryAvatarUrl || null
             },
             likes: {
                userIds: [],
                likes: 0
             },
             userId: req.userId!,
-            imageName: null,
+            cloudinaryUrl: null,
+            cloudinaryId: null,
             tags: []
          }
 
          if(tagNames) post.tags = tagNames
 
 
-         if(image){
-            generatedNameImg = `${uuidv4()}.jpg`
+               
+         const newPost = await PostService.createSync(post)
 
-            if (!fs.existsSync(defaultPath)){
-               fs.mkdirSync(defaultPath)
-            }//! QUESTION!
-
-            await image.mv(path.join(defaultPath, generatedNameImg))
-            post.imageName = generatedNameImg
+         if(!!image){
+            // const generateUniqueName = 
+            const result = await cloudinary.uploader.upload(image.path, {
+               folder: `project/${newPost._id}`
+            });
+            
+            newPost.cloudinaryId = result.public_id
+            newPost.cloudinaryUrl = result.secure_url
          }
 
-        const newPost = await PostService.createSync(post)
 
          await PostService.savePost(newPost)
 
          return res.status(200).json(newPost)
          
       } catch (e) {
-         console.log(e)
+
          return res.status(400).json({
             message: 'Faild with get'
          })
@@ -184,43 +190,33 @@ export class PostController {
    async updatePost(req: AuthRequest, res: Response) {
       try {
          const {  tags, text, title, _id } = req.body as HydratedPostInterface
-         const image = req?.files?.image as UploadedFile | undefined
-         const defaultPath = path.resolve(__dirname, '../../static/')
-         const post = await PostService.getById(_id)
-         
-         const updatePost: HydratedPostInterface = {
-            _id,
-            title,
-            text,
-            tags: []
-         }
 
-         updatePost.tags = !!tags ? tags : []
+         const image = req?.file
+         const post = await PostService.getById(_id)
+
+         if(title) post.title = title
+         if(text) post.text = text
+         if(!!tags) post.tags = tags
         
 
-         if(image) {
+         if(!!image) {
             
-            if(post.imageName){
-               const prevPathImage = path.join(defaultPath, post.imageName);
-               fs.unlinkSync(prevPathImage)
+            if(post.cloudinaryId){ // if image loaded
+               await cloudinary.uploader.destroy(post.cloudinaryId);
             }
-
-            const generatedNameImg = `${uuidv4()}.jpg`;
-
-            updatePost.imageName = generatedNameImg
+          
+            const result = await cloudinary.uploader.upload(image.path, {
+               folder: `project/${post._id}`
+            });
             
-            if (!fs.existsSync(defaultPath)){
-               fs.mkdirSync(defaultPath)
-            } //! QUESTION!
-
-            await image.mv(path.join(defaultPath, generatedNameImg))
+            post.cloudinaryId = result.public_id
+            post.cloudinaryUrl = result.secure_url
          }
 
-        const updatedPost = await PostService.update(updatePost)
+        const updatedPost = await PostService.update(post)
 
          return res.status(200).json(updatedPost)
       } catch (e) {
-         console.log(e)
          return res.status(400).json({
             message: 'Faild with update user'
          })
@@ -229,25 +225,29 @@ export class PostController {
 
    async deletePost(req: AuthRequest, res: Response) {
       try {
-         const { _id } = req.body
+         const query = req.query as {page: string}
+         const { id } = req.params
 
-         const post = await PostService.getById(_id)
+         const post = await PostService.getById(id)
 
-         if(post.imageName){
-            const imagePath = path.join(path.resolve(__dirname, '../../static/'), post.imageName)
+         if(!!post.cloudinaryId){
+            //TODO DELETE POST WITH IMAGE
 
-            fs.unlinkSync(imagePath)
+            await cloudinary.uploader.destroy(post.cloudinaryId);
+   
+            await cloudinary.api.delete_folder(`project/${post._id}`);
          }
-
+           
          await PostService.delete(post)
 
          await CommentService.removeAllCommentsByIdPost(post._id)
 
-         const posts = await PostService.getAll()
+         const posts = await PostService.getAll(query)
 
          return res.status(200).json({
             message: 'Пост был успешно удален',
-            posts
+            posts: posts.posts,
+            total: posts.total
          })
       } catch (e) {
          return res.status(400).json({

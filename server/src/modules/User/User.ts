@@ -19,8 +19,13 @@ const User = new Schema<UserInterface>({
       type: String,
       required: true,
    },
-   avatar: {
+   cloudinaryAvatarUrl: {
       type: String,
+      default: null
+   },
+   cloudinaryAvatarId: {
+      type: String,
+      default: null
    }
 }, {
    timestamps: true

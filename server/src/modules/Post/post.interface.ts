@@ -5,9 +5,10 @@ export interface PostInterface {
    title: string
    text: string
    userId: mongoose.Schema.Types.ObjectId | string
-   userInfo: Pick<UserInterface, 'firstname' | 'lastname'> & { avatar?: string | null }
+   userInfo: Pick<UserInterface, 'firstname' | 'lastname'> & { cloudinaryAvatarUrl?: string | null }
    tags: string[]
-   imageName?: string | null
+   cloudinaryUrl: string | null
+   cloudinaryId: string | null
    likes: {
       userIds: (mongoose.Schema.Types.ObjectId | string)[]
       likes: number
@@ -16,4 +17,4 @@ export interface PostInterface {
 
 
 export type HydratedPostInterface = Omit<PostInterface, 'userId' | 'userInfo' | 'likes'> & Pick<HydratedDocument<PostInterface>, '_id'>
-export type RequestPostBody = Omit<PostInterface, 'imageName' | 'user'>
+export type RequestPostBody = Omit<PostInterface, 'imageUrl' | 'user'>

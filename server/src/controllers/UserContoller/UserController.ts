@@ -1,15 +1,14 @@
-import { HttpRequest } from "../httpRequest";
 import User from "../../modules/User/User";
 import { Request, Response } from "express";
 import UserService from "../../services/UserService";
 import { AuthRequest } from "../../types/global.interface";
 import { UserInterface } from "../../modules/User/user.interface";
-import { UploadedFile } from "express-fileupload";
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import PostService from "../../services/PostService";
 import CommentService from "../../services/CommentService";
 import fs from 'fs'
+import cloudinary from "../../utils/cloudinary";
 
 export class UserController {
    setAvatarUrl: string = '/user/avatar'
@@ -54,42 +53,27 @@ export class UserController {
 
    async setAvatar(req: AuthRequest, res: Response){
 
-
       try {
-         const defaultPath = path.resolve(__dirname, '../../static/')
 
-         const image = req?.files?.image as UploadedFile | undefined
-
-         const user = await UserService.getById(req?.userId)
-
-         let generatedNameImg: string | undefined = undefined
+         const image = req?.file
 
          if(!image) return res.status(400).json({
             message: 'Ошибка установки аватара!',
          })
 
-         generatedNameImg = `${uuidv4()}.jpg`
-         console.log('!fs.existsSync(path.join(defaultPath))',!fs.existsSync(path.join(defaultPath)))
-         if (!fs.existsSync(path.join(defaultPath))){
-            fs.mkdirSync(path.join(defaultPath))
-         }//! QUESTION!
+         const user = await UserService.getById(req.userId)
 
-         await image.mv(path.join(defaultPath, generatedNameImg))
-
-         user.avatar = generatedNameImg
-
-
+         const result = await cloudinary.uploader.upload(image.path, {
+            folder: `project/user.avatar.${req.userId}`
+         });
+         
+         user.cloudinaryAvatarId = result.public_id
+         user.cloudinaryAvatarUrl = result.secure_url
 
          const updatedUser =  await UserService.update(user)
 
-         // const userInfo: Pick<UserInterface, 'firstname' | 'lastname' | 'avatar'> = {
-         //    firstname: updatedUser.firstname,
-         //    lastname: updatedUser.lastname,
-         //    avatar: updatedUser.avatar
-         // }
-
-          await PostService.updateManyAvatarByUserId(req.userId, updatedUser.avatar)
-          await CommentService.updateManyAvatarByUserId(req.userId, updatedUser.avatar)
+          await PostService.updateManyAvatarByUserId(req.userId, updatedUser.cloudinaryAvatarUrl)
+          await CommentService.updateManyAvatarByUserId(req.userId, updatedUser.cloudinaryAvatarUrl)
           
 
          return res.status(200).json({
@@ -105,32 +89,19 @@ export class UserController {
    }
 
    async deleteAvatar(req: AuthRequest, res: Response) {
-      const defaultPath = path.resolve(__dirname, '../../static/')
+
       try {
          const user = await UserService.getById(req.userId)
-         if(!user?.avatar) return res.status(400).json({
-            message: "У пользователя нет аватарка"
+         if(!user?.cloudinaryAvatarId) return res.status(400).json({
+            message: "You dont have avatar"
          })
 
+         await cloudinary.uploader.destroy(user.cloudinaryAvatarId);
+   
+         await cloudinary.api.delete_folder(`project/user.avatar.${user._id}`);
 
-       
-
-         const imagePath = path.join(defaultPath, user.avatar);
-
-         if (!fs.existsSync(defaultPath)){
-            fs.mkdirSync(defaultPath)
-         }//! QUESTION!
-
-         fs.unlinkSync(imagePath)
-
-         user.avatar = null
-
-         // const userInfo: Pick<UserInterface, 'firstname' | 'lastname' | 'avatar'> = {
-         //    firstname: user.firstname,
-         //    lastname: user.lastname,
-         //    avatar: user.avatar
-         // }
-
+         user.cloudinaryAvatarId = null
+         user.cloudinaryAvatarUrl = null
 
          await PostService.updateManyAvatarByUserId(req.userId, null)
          await CommentService.updateManyAvatarByUserId(req.userId, null)

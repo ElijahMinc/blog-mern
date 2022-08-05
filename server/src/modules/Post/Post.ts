@@ -43,12 +43,16 @@ const Post = new Schema<PostInterface>({
          type: String,
          required: true
       },
-      avatar: {
+      cloudinaryAvatarUrl: {
          type: String,
          default: null
       }
    },
-   imageName: {
+   cloudinaryUrl: {
+      type: String,
+      default: null
+   },
+   cloudinaryId: {
       type: String,
       default: null
    }
@@ -56,5 +60,7 @@ const Post = new Schema<PostInterface>({
 }, {
    timestamps: true
 })
+
+Post.index({ title: 'text'}, {default_language: 'none' })
 
 export default model('Post', Post);

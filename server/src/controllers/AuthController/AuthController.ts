@@ -84,7 +84,6 @@ export class AuthController {
             token
          })
       } catch (e) {
-         console.log('ERROR', e)
          return res.status(400).json({
             message: 'Faild with post'
          })
