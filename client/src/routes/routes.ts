@@ -2,6 +2,7 @@ import { RouteProps } from "react-router-dom";
 import { AuthForm } from "@components/Common/Form/AuthForm/AuthForm";
 import { Home } from "@pages/Home";
 import { Post } from "@pages/Post";
+import { Chat } from "@/pages/Chat";
 
 export const publicRoutes: RouteProps[] = [
    {
@@ -35,6 +36,11 @@ export const privateRoutes: RouteProps[] = [
    {
       path: '/post',
       component: Post,
+      exact: true
+   },
+   {
+      path: '/chat',
+      component: Chat,
       exact: true
    }
 ]

@@ -53,8 +53,9 @@ const App: React.FC = () => {
             <Toast />
             <Header/>
             <Container maxWidth="lg" sx={{
-              height: 'calc(100vh - 64px)',
-              paddingTop: '100px'
+              // height: 'calc(100vh - 64px)',
+              paddingTop: '100px',
+              paddingBottom: '30px',
             }}>
                 <AppRouter />
             </Container>

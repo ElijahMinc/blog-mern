@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   {infoPage}
                </Typography>
-                  <Button sx={{
+                     <Button sx={{
                            marginRight: '10px',
                            // marginLeft: 'auto'
 
@@ -82,7 +82,15 @@ export const Header: React.FC = () => {
                         width: 'auto',
                         marginLeft: 'auto'
                      }} alignItems="center">
+                        <Grid item>
+                           <Button sx={{
+                              marginRight: '10px',
+                              // marginLeft: 'auto'
 
+                              }} color="secondary" variant="contained" onClick={() => push('/chat')}>
+                                 Chat
+                           </Button>
+                        </Grid>
                         <Grid item>
                            <IconButton
                               size="large"
