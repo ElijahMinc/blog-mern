@@ -3,3 +3,7 @@ export interface BaseInitState<T> {
    error: string
    data: T
 }
+
+export interface BaseError {
+   message: string
+}

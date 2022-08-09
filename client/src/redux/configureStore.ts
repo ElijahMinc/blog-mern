@@ -1,13 +1,14 @@
 
 import { AnyAction, combineReducers, configureStore, ThunkDispatch } from "@reduxjs/toolkit";
-import { userReducer, postReducer, commentsReducer, toastReducer, filterReducer } from "."
+import { userReducer, postReducer, commentsReducer, toastReducer, filterReducer, chatReducer } from "."
 
 const rootReducer = combineReducers({
    users: userReducer,
    posts: postReducer,
    comments: commentsReducer,
    toast: toastReducer,
-   filter: filterReducer
+   filter: filterReducer,
+   chat: chatReducer
 })
 
 export const store = configureStore({

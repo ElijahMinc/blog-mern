@@ -1,3 +1,4 @@
+import { $AuthApi } from "@/http/axios.http"
 import { Action, AnyAction, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
@@ -62,11 +63,7 @@ export const getCommentsByPostIdThunk = createAsyncThunk<Comment[], string, {rej
 
     let url = `${process.env.REACT_APP_API_URL}/comment/${postId}`
 
-    const request = await axios.get(url, {
-       headers: {
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.get(url)
     const response = await request.data
 
     return response
@@ -90,12 +87,7 @@ export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {reject
       formData.append(name, value)
     })
 
-    const request = await axios.post(url, formData, {
-       headers: {
-          'Content-Type': `multipart/form-data;`,
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.post(url, formData)
     const response = await request.data
     dispatch(setToast({title: 'Comment was created! ^^', status: 'success'}))
 
@@ -109,10 +101,6 @@ export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {reject
     return rejectWithValue(error)
   }
 })
-
-
-
-
 
 
 export const commentsSlice = createSlice({

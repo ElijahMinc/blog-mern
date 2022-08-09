@@ -36,7 +36,6 @@ const App: React.FC = () => {
      !!token && dispatch(userThunk(token))
   }, [token])
 
-
   const theme = useMemo(() => createTheme({
     palette: {
       mode: toggleTheme,

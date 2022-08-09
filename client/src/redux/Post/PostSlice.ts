@@ -1,3 +1,4 @@
+import { $AuthApi } from "@/http/axios.http"
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
@@ -74,11 +75,8 @@ export const getPostThunk = createAsyncThunk<{ posts:Post[], total: number}, {ty
           return prevValue + `tags=${currentValue}`
       },  !page && !searchValue ? '?' : '&')
 
-      const request = await axios.get(url, {
-         headers: {
-            'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-          }
-      })
+      const request = await $AuthApi.get(url)
+
       const response = await request.data
 
       return response
@@ -97,11 +95,7 @@ export const getTagsByPopularPostThunk = createAsyncThunk<Post['tags'], undefine
     const url = `${process.env.REACT_APP_API_URL}/post-popular-tags`
 
 
-    const request = await axios.get(url, {
-       headers: {
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.get(url)
     const response = await request.data
 
     return response
@@ -135,11 +129,7 @@ export const createPostThunk = createAsyncThunk<Post, FormDefaultValuesPost, {re
 
 
 
-    const request = await axios.post(url, formData, {
-       headers: {
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.post(url, formData)
     const response = await request.data
     
     dispatch(setToast({title: 'Post was created! ^^', status: 'success'}))
@@ -174,12 +164,7 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
     let url = `${process.env.REACT_APP_API_URL}/post`
 
 
-    const request = await axios.put(url, formData, {
-       headers: {
-          'Content-Type': `multipart/form-data;`,
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.put(url, formData)
     const response = await request.data
 
     dispatch(setToast({title: 'Post was edited! ^^', status: 'success'}))
@@ -204,11 +189,7 @@ export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string
     let url = `${process.env.REACT_APP_API_URL}/post/like/${_id}`
 
 
-    const request = await axios.put(url, _id, {
-       headers: {
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.put(url, _id)
     const response = await request.data
 
     dispatch(setToast({title: 'Post was liked', status: 'success'}))
@@ -235,11 +216,7 @@ export const deletePostThunk = createAsyncThunk<{ posts: Post[], message: string
     if(!!filters.searchValue) url += `${!filters.page ? '?' : '&'}searchValue=${filters.searchValue}`
 
 
-    const request = await axios.delete(url, {
-       headers: {
-          'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-        }
-    })
+    const request = await $AuthApi.delete(url)
     const response = await request.data
     dispatch(setToast({title: 'Post was deleted', status: 'success'}))
 

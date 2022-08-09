@@ -6,21 +6,20 @@ import { Container } from '@mui/system'
 import styles from './AuthForm.module.css'
 import {   useForm } from 'react-hook-form'
 import { ThemedInput } from '../../ThemedInput/ThemedInput'
-import { getFormRules } from '../../../../utils/formRules'
-import { useCheckIsLoginPage } from '../../../../hooks/useCheckIsLoginPage'
+import { getFormRules } from '@utils/formRules'
+import { useCheckIsLoginPage } from '@hooks/useCheckIsLoginPage'
 import { AuthFormDefaultValues } from './types'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginThunk, registerThunk, selectUser } from '../../../../redux'
-import { AppDispatch } from '../../../../redux/configureStore'
+import { loginThunk, registerThunk, selectUser } from '@redux/index'
+import { AppDispatch } from '@redux/configureStore'
 import { useHistory } from 'react-router-dom'
-
-
 
 const defaultValues: AuthFormDefaultValues = {
    firstname: "",
    lastname: "",
    email: "",
-   password: ""
+   password: "",
+   confirmPassword: ""
 }
 
 export const AuthForm: React.FC = () => {
@@ -33,7 +32,9 @@ export const AuthForm: React.FC = () => {
       mode: 'onSubmit',
    })
 
-   const { handleSubmit } = form
+   const { handleSubmit, watch,  } = form
+
+   const passwordValue = watch('password')
 
    const onSubmit = async (data: AuthFormDefaultValues) =>  {
       if(isLoginPage){
@@ -96,16 +97,30 @@ export const AuthForm: React.FC = () => {
                     />
                   </Grid>
                   <Grid item xs={12}>
-                  <ThemedInput<AuthFormDefaultValues>
-                     form={form}
-                     name='password'
-                     type="password"
-                     className={styles.field}
-                     label="Your Password"
-                     rules={getFormRules('Password Field is Required', {
-                        isPass: true
-                     })}
-                    />
+                     <ThemedInput<AuthFormDefaultValues>
+                        form={form}
+                        name='password'
+                        type="password"
+                        className={styles.field}
+                        label="Your Password"
+                        rules={getFormRules('Password Field is Required', {
+                           isPass: true
+                        })}
+                     />
+                  </Grid>
+                  <Grid item xs={12}>
+                     <ThemedInput<AuthFormDefaultValues>
+                        form={form}
+                        name='confirmPassword'
+                        type="password"
+                        className={styles.field}
+                        label="Please, confirm your password"
+                        rules={
+                           {
+                           ...getFormRules('Confirm password Field is Required', {isPass: true }), 
+                           validate: (value) => passwordValue !== value ? 'Password confirmation does not match password' : true
+                        }}
+                     />
                   </Grid>
                   <Grid item xs={12}>
                      <Button type='submit' disabled={isFetchingAuth} variant="contained" fullWidth>Submit</Button>

@@ -1,4 +1,4 @@
-import { ControllerProps } from "react-hook-form"
+import { ControllerProps, ValidateResult } from "react-hook-form"
 import { regExp } from "./regExp"
 
 
