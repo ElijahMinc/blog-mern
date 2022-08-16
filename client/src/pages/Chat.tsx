@@ -14,7 +14,7 @@ import { AppDispatch } from '@/redux/configureStore';
 export const Chat = () => {
 
   const dispatch = useDispatch<AppDispatch>()
-  const { messages, isJoined } = useSelector(selectChat)
+  const { messages, isJoined, userName } = useSelector(selectChat)
   const messagesRef = useRef<MessageInterface[]>([]);
 
 
@@ -37,7 +37,7 @@ export const Chat = () => {
   useEffect(() => {
     socket.on('ROOM:LEAVE', (userLeave) => {
       console.log('disconnect')
-      dispatch(setJoined(false))
+      userLeave.userName === userName && dispatch(setJoined(false))
       dispatch(setToast({title: `User ${userLeave.userName} leave`, status: 'info'}))
     })
   }, [])
