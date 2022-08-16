@@ -1,12 +1,11 @@
-import { Request, Response, Router } from "express";
-import AuthController from "../controllers/AuthController/AuthController";
-import { authValidator } from "../controllers/AuthController/Validator";
-import corsMiddleware from "../middlewares/cors.middleware";
+import { Router } from "express";
 
+import AuthController from "../controllers/AuthController/AuthController";
+import { validateUser } from '../middlewares/validateUser.middleware'
 const authRouter = Router()
 
-authRouter.post(AuthController.loginUrl, authValidator, AuthController.login)
-authRouter.post(AuthController.registerUrl, authValidator, AuthController.register)
+authRouter.post(AuthController.loginUrl, validateUser, AuthController.login)
+authRouter.post(AuthController.registerUrl, validateUser, AuthController.register)
 
 
 

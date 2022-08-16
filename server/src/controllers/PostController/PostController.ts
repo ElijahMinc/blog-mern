@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { NextFunction, Response } from "express";
 import { AuthRequest } from "../../types/global.interface";
 import PostService from "../../services/PostService";
 import { HydratedPostInterface, PostInterface, RequestPostBody } from "../../modules/Post/post.interface";
@@ -7,6 +7,7 @@ import mongoose, { HydratedDocument, ObjectId } from "mongoose";
 import { UserInterface } from "../../modules/User/user.interface";
 import CommentService from '../../services/CommentService';
 import cloudinary from '../../utils/cloudinary'
+import { ApiError } from "../../services/ErrorService";
 
 
 export class PostController {
@@ -22,20 +23,18 @@ export class PostController {
    updatePostUrl: string = '/post'
    deletePostUrl: string = '/post/:id'
 
-   async getAll(req: AuthRequest, res: Response) {
+   async getAll(req: AuthRequest, res: Response, next: NextFunction) {
       try {
          const query = req.query as {page: string, searchValue?: string}
          const posts = await PostService.getAll(query)
 
          return res.status(200).json(posts)
       } catch (e) {
-         return res.status(400).json({
-            message: 'Faild with get'
-         })
+         next(e)
       }
    }
    
-   async getOne(req: AuthRequest, res: Response) {
+   async getOne(req: AuthRequest, res: Response, next: NextFunction) {
       try {
          const { id: _id } = req.params 
 
@@ -44,14 +43,11 @@ export class PostController {
 
          return res.status(200).json({ posts: [post] })
       } catch (e) {
-
-         return res.status(400).json({
-            message: 'Faild with get'
-         })
+         next(e)
       }
    }
 
-   async getPopular(req: AuthRequest, res: Response) {
+   async getPopular(req: AuthRequest, res: Response, next: NextFunction) {
       try {
          const query = req.query as { page: string }
 
@@ -59,26 +55,22 @@ export class PostController {
 
          return res.status(200).json(posts)
       } catch (e) {
-         return res.status(400).json({
-            message: 'Faild with get'
-         })
+         next(e)
       }
    }
 
-   async getTagsByPopularPost(_: AuthRequest, res: Response) {
+   async getTagsByPopularPost(_: AuthRequest, res: Response, next: NextFunction) {
       try {
          const tags = await PostService.getTagsByPopular()
 
          return res.status(200).json(tags)
       } catch (e) {
-         return res.status(400).json({
-            message: 'Faild with get'
-         })
+         next(e)
       }
    }
 
 
-   async likePost(req: AuthRequest, res: Response){
+   async likePost(req: AuthRequest, res: Response, next: NextFunction){
       try {
 
          const { id: _id } = req.params 
@@ -118,14 +110,11 @@ export class PostController {
 
          return res.status(200).json([post])
       } catch (e) {
-
-         return res.status(400).json({
-            message: 'Failed like Post'
-         })
+         next(e)
       }
    }
 
-   async createPost(req: AuthRequest, res: Response) {
+   async createPost(req: AuthRequest, res: Response, next: NextFunction) {
 
       try {
          const { text, title, ...rest } = req.body as RequestPostBody
@@ -134,10 +123,8 @@ export class PostController {
 
          const user = await UserService.getById(req.userId) as HydratedDocument<UserInterface>
  
-         if(image && image?.size >= 524288){
-            return res.status(400).json({
-               message: 'File is very big!'
-            })
+         if(image && image.size >= 524288){
+            next(ApiError.BadRequest('File is very big!'))
          }
 
          const post: PostInterface = {
@@ -180,18 +167,20 @@ export class PostController {
          return res.status(200).json(newPost)
          
       } catch (e) {
-
-         return res.status(400).json({
-            message: 'Faild with get'
-         })
+         next(e)
       }
    }
 
-   async updatePost(req: AuthRequest, res: Response) {
+   async updatePost(req: AuthRequest, res: Response, next: NextFunction) {
       try {
          const {  tags, text, title, _id } = req.body as HydratedPostInterface
 
          const image = req?.file
+
+         if(image && image.size >= 524288){
+            next(ApiError.BadRequest('File is very big!'))
+         }
+
          const post = await PostService.getById(_id)
 
          if(title) post.title = title
@@ -201,7 +190,7 @@ export class PostController {
 
          if(!!image) {
             
-            if(post.cloudinaryId){ // if image loaded
+            if(post.cloudinaryId){ // if image was load
                await cloudinary.uploader.destroy(post.cloudinaryId);
             }
           
@@ -217,13 +206,11 @@ export class PostController {
 
          return res.status(200).json(updatedPost)
       } catch (e) {
-         return res.status(400).json({
-            message: 'Faild with update user'
-         })
+         next(e)
       }
    }
 
-   async deletePost(req: AuthRequest, res: Response) {
+   async deletePost(req: AuthRequest, res: Response, next: NextFunction) {
       try {
          const query = req.query as {page: string}
          const { id } = req.params
@@ -231,8 +218,6 @@ export class PostController {
          const post = await PostService.getById(id)
 
          if(!!post.cloudinaryId){
-            //TODO DELETE POST WITH IMAGE
-
             await cloudinary.uploader.destroy(post.cloudinaryId);
    
             await cloudinary.api.delete_folder(`project/${post._id}`);
@@ -242,17 +227,15 @@ export class PostController {
 
          await CommentService.removeAllCommentsByIdPost(post._id)
 
-         const posts = await PostService.getAll(query)
+         const {total, posts} = await PostService.getAll(query)
 
          return res.status(200).json({
             message: 'Пост был успешно удален',
-            posts: posts.posts,
-            total: posts.total
+            posts,
+            total
          })
       } catch (e) {
-         return res.status(400).json({
-            message: 'Faild with delete post'
-         })
+         next(e)
       }
    }
 }
