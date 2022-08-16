@@ -22,18 +22,13 @@ export const Chat = () => {
 
   useEffect(() => {
     socket.on('ROOM:JOINED', (messages) => {
-      console.log('messages', messages)
-
       dispatch(setMessages(messages))
       dispatch(setJoined(true))
     })
     socket.on('USERS:SET', (users) => {
-      console.log('users', users)
       dispatch(setUsers(users))
     })
     socket.on('NEW:MESSAGE', (messages) => {
-      console.log('messages', messages)
-
       dispatch(setMessages(messages))
     })
    
@@ -41,20 +36,15 @@ export const Chat = () => {
 
   useEffect(() => {
     socket.on('ROOM:LEAVE', (userLeave) => {
-      // dispatch(setMessages([...messagesRef.current, {
-      //   userId: '',
-      //   userName: ``,
-      //   roomId: ``,
-      //   userAvatar: userLeave.userAvatar ?? '',
-      //   text: `User Leave: ${userLeave.userName} :'C`
-      // }]))
+      console.log('disconnect')
+      dispatch(setJoined(false))
       dispatch(setToast({title: `User ${userLeave.userName} leave`, status: 'info'}))
     })
   }, [])
 
 
   useEffect(() => {
-   !isJoined && dispatch(getRooms())
+    !isJoined && dispatch(getRooms())
   }, [isJoined])
 
   return (

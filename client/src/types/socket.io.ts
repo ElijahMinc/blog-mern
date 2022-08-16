@@ -27,12 +27,14 @@ export interface ServerToClientEvents {
    ['USERS:SET']: (users: UserInterface[]) => void;
    ['NEW:MESSAGE']: (messageData: MessageInterface[]) => void
    ['ROOM:LEAVE']: (leaveName: UserInterface) => void
+   ['MESSAGE:WRITING']: (data: { userName: UserInterface['userName']}) => void
 
  }
  
  export interface ClientToServerEvents {
   ['ROOM:JOIN']: (connectData: RoomJoinInterface) => void
   ['NEW:MESSAGE']: (messageData: MessageInterface) => void
+  ['MESSAGE:WRITING']: (data: { userName: UserInterface['userName'], roomId: RoomJoinInterface['roomId']}) => void
  }
  
  export interface InterServerEvents {}

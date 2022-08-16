@@ -1,8 +1,8 @@
 import React from 'react'
 import { Redirect, Route, Switch } from 'react-router-dom'
-import { useAuth } from '../../../hooks/useAuth'
-import { privateRoutes, publicRoutes } from '../../../routes/routes'
-import { Loader } from '../Loader/Loader'
+import { useAuth } from '@hooks/useAuth'
+import { Loader } from '@Common/Loader/Loader'
+import {privateRoutes, publicRoutes} from '@/routes/routes'
 
 export const AppRouter: React.FC = () => {
   const { isAuth, isAuthFetching } = useAuth()

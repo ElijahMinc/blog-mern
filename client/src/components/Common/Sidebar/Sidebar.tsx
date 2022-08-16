@@ -1,13 +1,15 @@
 import { Button, Grid, Paper, SelectChangeEvent, Typography } from '@mui/material'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getTagsByPopularPostThunk, selectPost } from '@redux/index'
 import { AppDispatch } from '@redux/configureStore'
 import { TagSelect } from '@Common/TagSelect/TagSelect'
 import { setTagsValue as setTags } from '@redux/Filter'
+import { useSkipFirstMount } from '@/hooks/useSkipFirstMount'
 
 export const Sidebar: React.FC = () => {
-   const [tagsValue, setTagsValue] = React.useState<string[]>([]);
+
+   const [tagsValue, setTagsValue] = useState<string[]>([]);
 
       const {
             data:{
@@ -17,8 +19,13 @@ export const Sidebar: React.FC = () => {
       const dispatch = useDispatch<AppDispatch>()
 
       useEffect(() => {
-            dispatch(getTagsByPopularPostThunk())
+        dispatch(getTagsByPopularPostThunk())
       }, [])
+
+      useSkipFirstMount(() => {
+            dispatch(setTags(tagsValue))
+      }, [tagsValue])
+
 
       const handleChange = (event: SelectChangeEvent<typeof tagsValue>) => {
             const {
@@ -32,9 +39,7 @@ export const Sidebar: React.FC = () => {
 
       const handleClearTags = () =>  setTagsValue([])
 
-      useEffect(() => {
-            dispatch(setTags(tagsValue))
-      }, [tagsValue])
+
 
    return (
       <Paper sx={{
@@ -46,20 +51,20 @@ export const Sidebar: React.FC = () => {
             {!!tags?.length ? (
                   <>
                   <TagSelect tags={tags} value={tagsValue} handleChange={handleChange}/>
-                 {!!tagsValue.length  && (<Button onClick={handleClearTags} sx={{margin: '10px 0'}}>Clear</Button>)} 
-                  {!!tagsValue.length 
-                     && (
-                        <Grid container gap={3} justifyContent="space-evenly" alignItems="center">
-                              {tagsValue.map(tag => (
-                              <Grid item>
-                                    <Typography key={`tag-#${tag}`} paragraph>
-                                          {`# ${tag}`}
-                                    </Typography>
+                  {!!tagsValue.length  && (<Button onClick={handleClearTags} sx={{margin: '10px 0'}}>Clear</Button>)} 
+                        {!!tagsValue.length 
+                        && (
+                              <Grid container gap={3} justifyContent="space-evenly" alignItems="center">
+                                    {tagsValue.map((tag,idx) => (
+                                    <Grid key={`tag-#${tag}-${idx}`}  item>
+                                          <Typography paragraph>
+                                                {`# ${tag}`}
+                                          </Typography>
+                                    </Grid>
+                                    ))}
                               </Grid>
-                              ))}
-                        </Grid>
-                       
-                     )}
+                        
+                        )}
                   </>
             ) : (
                   <Typography paragraph>No popular tags</Typography>

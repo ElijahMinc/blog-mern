@@ -6,6 +6,9 @@ import { socket } from '@/http/socket.io.http';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectChat, selectUser, setJoined } from '@/redux';
 import moment from 'moment';
+import { useDebounce } from '@/hooks/useDebounce';
+import { ListUsers } from './ListUsers/ListUsers';
+import { Emoji } from '@/components/Common/Emoji/Emoji';
 
 const useStyles = makeStyles({
    table: {
@@ -27,11 +30,7 @@ const useStyles = makeStyles({
    }
  });
 
-interface MessagerProps {
-
-}
-
-export const Messager: React.FC<MessagerProps> = () => {
+export const Messager: React.FC = () => {
    const classes = useStyles();
 
    const { data: {
@@ -49,7 +48,9 @@ export const Messager: React.FC<MessagerProps> = () => {
 
  const messagesRef = useRef<HTMLUListElement | null>(null)
 
- const sendMessage = async () => {
+
+
+ const sendMessage = () => {
     const messageData = {
         userId: _id,
         text: messageValue,
@@ -90,9 +91,6 @@ export const Messager: React.FC<MessagerProps> = () => {
             <Grid item xs={3} className={classes.borderRight500}>
                 <List>
                     <ListItem key="RemySharp">
-                        {/* <ListItemIcon>
-                            <Avatar alt="Remy Sharp" src="https://material-ui.com/static/images/avatar/1.jpg" />
-                        </ListItemIcon> */}
                         <Typography>Room: {roomId}</Typography>
                     </ListItem>
                 </List>
@@ -101,12 +99,11 @@ export const Messager: React.FC<MessagerProps> = () => {
                 <Divider /> 
                 <List>
                     {users.map(({userAvatar, userName}, idx) => (
-                        <ListItem key={`${userName}-${idx}`}>
-                            <ListItemIcon>
-                                <Avatar alt="Remy Sharp" src={userAvatar ?? ''} />
-                            </ListItemIcon>
-                            <Typography >{userName}</Typography>
-                        </ListItem>
+                        <ListUsers 
+                        key={`${userAvatar}-${idx}`} 
+                        {...
+                            {userAvatar, userName, roomId}
+                        } />
                     ))}
                 </List>
             </Grid>
@@ -118,83 +115,48 @@ export const Messager: React.FC<MessagerProps> = () => {
                                     <Grid item xs={12}>
                                         <Grid 
                                             container
-                                            flexDirection={message.userId === _id ? 'row-reverse' : 'row'}
                                             alignItems="center" 
                                             flexWrap="nowrap"
-                                            gap={4}
+                                            gap={3}
                                         >
-                                            <Grid item>
+                                            <Grid item xs={1} alignSelf="flex-end">
                                                 <Grid container flexDirection="column">
                                                     <Grid item >
-                                                        <Avatar alt="Remy Sharp" sx={message.userId === _id ? {marginLeft: 'auto'} : {marginRight: 'auto'}}  src={message.userAvatar} />
+                                                        <Avatar   src={message.userAvatar} />
 
                                                     </Grid>
                                                     <Grid item>
-                                                        <Typography component="p" >{message.userName}</Typography>
+                                                    <Typography component="span"  sx={{fontSize: '12px'}}  >{message.userName}</Typography>
                                                     </Grid>
                                                     <Grid item>
-                                                    <Typography component="p" >{moment(Date.now()).format('DD/MM/YYYY')}</Typography>
-
-
+                                                    <Typography component="span"  sx={{fontSize: '12px'}}  >{moment().format('DD:mm:yyyy')}</Typography>
                                                     </Grid>
                                                 </Grid>
                                             </Grid>
-                                            <Grid item>
-                                                <Typography component="p"  >{message.text}</Typography>
+                                            <Grid item xs={11} >
+                                                <Typography component="p" >{message.text}</Typography>
                                             </Grid>
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                            {/* <Grid container>
-                                <Grid item xs={12}>
-                                    <Typography component="p" align={message.userId === _id ? 'right' : 'left'} >{message.text}</Typography>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <Typography component="p" align={message.userId === _id ? 'right' : 'left'}>{message.userName}</Typography>
-                                </Grid>
-                                    <Grid item xs={12}>
-                                        <Avatar alt="Remy Sharp" sx={ message.userId === _id ?  { marginLeft: 'auto'} : {marginRight: 'auto'}} src={message.userAvatar ?? ''} />
+                 
 
-                                    </Grid>
-
-                                <Grid item xs={12}>
-                                    <Typography component="p" align={message.userId === _id ? 'right' : 'left'} >{moment(Date.now()).format('DD/MM/YYYY')}</Typography>
-                                </Grid>
-                            </Grid> */}
                         </ListItem>
+                        
                     ))}
-                    
-                    {/* <ListItem key="2">
-                        <Grid container>
-                            <Grid item xs={12}>
-                                <Typography component="p" align="left" >Hey, Iam Good! What about you ?</Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Typography component="p" align="left" >Name</Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Typography component="p" align="left" >09:31</Typography>
-                            </Grid>
-                        </Grid>
-                    </ListItem>
-                    <ListItem key="3">
-                        <Grid container>
-                            <Grid item xs={12}>
-                                <Typography component="p" align="right" >asasddas</Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Typography component="p" align="right" >10:30</Typography>
-                            </Grid>
-                        </Grid>
-                    </ListItem> */}
-
                 </List>
                 <Divider />
-                <Grid container style={{padding: '20px'}} justifyContent="space-between" gap={2}>
+                <Grid container style={{padding: '20px'}} justifyContent="space-between" gap={1}>
                     <Grid item xs={10}>
-                        <TextField id="outlined-basic-email" value={messageValue} onChange={(e) => setMessageValue(e.target.value)} label="Type Something" fullWidth />
+                        <TextField id="outlined-basic-email" value={messageValue} onChange={(e) => {
+                            setMessageValue(e.target.value)
+                            socket.emit('MESSAGE:WRITING', {roomId, userName})
+                        }} label="Type Something" fullWidth />
                     </Grid>
-                    <Grid xs={1} alignSelf="right">
+                    {/* <Grid item xs={3}>
+                        <Emoji />
+                    </Grid> */}
+                    <Grid item xs={1} alignSelf="right">
                         <Fab color="primary" aria-label="add" disabled={!messageValue} onClick={sendMessage}> 
                             <SendIcon />
                         </Fab>

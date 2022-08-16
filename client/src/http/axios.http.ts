@@ -8,8 +8,9 @@ const $AuthApi = axios.create({
 })
 
 
-
-
+const $BaseApi = axios.create({
+   baseURL: `${process.env.REACT_APP_API_URL}`,
+})
 
 $AuthApi.interceptors.request.use((config: AxiosRequestConfig<any>) => {
    if(!!config.headers){
@@ -20,4 +21,4 @@ $AuthApi.interceptors.request.use((config: AxiosRequestConfig<any>) => {
 })
 
 
-export { $AuthApi }
+export { $AuthApi, $BaseApi }

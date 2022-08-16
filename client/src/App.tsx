@@ -33,7 +33,7 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-     !!token && dispatch(userThunk(token))
+     !!token && dispatch(userThunk())
   }, [token])
 
   const theme = useMemo(() => createTheme({
@@ -44,7 +44,6 @@ const App: React.FC = () => {
   }), [toggleTheme])
   
 
-  // console.log('theme', theme)
   return (
       <ThemeProvider theme={theme}>
         <CssBaseline />

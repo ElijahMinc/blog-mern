@@ -1,4 +1,7 @@
 import { $AuthApi } from "@/http/axios.http"
+import { postService } from "@/service/PostService/PostService"
+import { QueryParams } from "@/types/queryParams"
+import { getParams } from "@/utils/getParams"
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
@@ -47,37 +50,12 @@ const initialState: BaseInitState<InitialStatePost> = {
   error: ''
 }
 
-export const getPostThunk = createAsyncThunk<{ posts:Post[], total: number}, {typeTab?: TabValue, tags?:string[], id?: string, page?: number, limit?: number, searchValue?: string}, {rejectValue: string }>('post/get', async ({typeTab, id, page = undefined, searchValue = '', tags = []}, { dispatch, rejectWithValue }) => {
+export const getPostThunk = createAsyncThunk<{ posts:Post[], total: number}, QueryParams, {rejectValue: string }>('post/get', async ({typeTab, id, page = undefined, searchValue = '', tags = []}, { rejectWithValue }) => {
     try {
+      
+      const request = await postService.getAllPosts({ typeTab, id, page, searchValue, tags})
 
-      let url = `${process.env.REACT_APP_API_URL}/post`
-
-      switch (typeTab) {
-        case TabValue.ALL:
-          break;
-        case TabValue.POPULARY:
-            url += '-popular'
-          break;
-        case TabValue.CHOSEN_POST:
-            url += `/${id}`
-          break;
-        default:
-          break;
-      }
-
-      if(!!page) url += `?page=${page}`
-
-      if(!!searchValue) url += `${!page ? '?' : '&'}searchValue=${searchValue}`
-
-      if(!!tags.length) url += tags.reduce((prevValue, currentValue, idx) => {
-          if(tags.length - 1 !== idx)  return prevValue + `tags=${currentValue}&`
-
-          return prevValue + `tags=${currentValue}`
-      },  !page && !searchValue ? '?' : '&')
-
-      const request = await $AuthApi.get(url)
-
-      const response = await request.data
+      const response = await request?.data
 
       return response
     } catch (err) {
@@ -92,11 +70,9 @@ export const getPostThunk = createAsyncThunk<{ posts:Post[], total: number}, {ty
 export const getTagsByPopularPostThunk = createAsyncThunk<Post['tags'], undefined, {rejectValue: string }>('post/get-popular-tags', async (_: undefined, { dispatch, rejectWithValue }) => {
   try {
 
-    const url = `${process.env.REACT_APP_API_URL}/post-popular-tags`
-
-
-    const request = await $AuthApi.get(url)
-    const response = await request.data
+    const url = `-popular-tags`
+    const request = await postService.getPopularTags({}, url)
+    const response = await request?.data
 
     return response
   } catch (err) {
@@ -125,12 +101,8 @@ export const createPostThunk = createAsyncThunk<Post, FormDefaultValuesPost, {re
       formData.append(name, value)
     })
 
-    let url = `${process.env.REACT_APP_API_URL}/post`
-
-
-
-    const request = await $AuthApi.post(url, formData)
-    const response = await request.data
+    const request = await postService.create(formData)
+    const response = await request?.data
     
     dispatch(setToast({title: 'Post was created! ^^', status: 'success'}))
 
@@ -161,11 +133,10 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
       formData.append(name, value)
     })
 
-    let url = `${process.env.REACT_APP_API_URL}/post`
 
-
-    const request = await $AuthApi.put(url, formData)
-    const response = await request.data
+    const request =  await postService.update<FormData>(formData)
+    
+    const response = await request?.data
 
     dispatch(setToast({title: 'Post was edited! ^^', status: 'success'}))
 
@@ -186,13 +157,8 @@ export const editPostThunk = createAsyncThunk<Post, FormDefaultValuesPost & {_id
 export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string }>('post/edit/like', async (_id, { dispatch, rejectWithValue }) => {
   try {
 
-    let url = `${process.env.REACT_APP_API_URL}/post/like/${_id}`
-
-
-    const request = await $AuthApi.put(url, _id)
+    const request =  await postService.likePost(_id)
     const response = await request.data
-
-    dispatch(setToast({title: 'Post was liked', status: 'success'}))
 
     return response
   } catch (err) {
@@ -208,16 +174,10 @@ export const likePostThunk = createAsyncThunk<Post, string, {rejectValue: string
 
 export const deletePostThunk = createAsyncThunk<{ posts: Post[], message: string, total: number }, {_id: string, filters: InitialStateFilter }, {rejectValue: string }>('post/delete', async ({_id, filters}, { dispatch, rejectWithValue }) => {
   try {
+    const request = await postService.deletePost(_id)
 
-    let url = `${process.env.REACT_APP_API_URL}/post/${_id}`
+    const response = await request?.data
 
-    if(!!filters.page) url += `?page=${filters.page}`
-
-    if(!!filters.searchValue) url += `${!filters.page ? '?' : '&'}searchValue=${filters.searchValue}`
-
-
-    const request = await $AuthApi.delete(url)
-    const response = await request.data
     dispatch(setToast({title: 'Post was deleted', status: 'success'}))
 
     return response

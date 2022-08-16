@@ -13,7 +13,6 @@ const craco = {
       '@helpers': path.resolve(__dirname, 'src/helpers'),
       '@typesModule': path.resolve(__dirname, 'src/types'),
       '@pages': path.resolve(__dirname, 'src/pages'),
-      '@common': path.resolve(__dirname, 'src/common'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@HOC': path.resolve(__dirname, 'src/HOC'),
       '@static': path.resolve(__dirname, 'src/static'),

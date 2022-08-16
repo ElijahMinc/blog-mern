@@ -1,10 +1,6 @@
-import { AlertColor } from "@mui/material"
-import { Action, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
-import axios from "axios"
-import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
-import { LocalStorageKeys, LocalStorageService } from "../../service/LocalStorageService"
-import { BaseInitState } from "../../types/global.types"
-import { v4 as uuidv4 } from 'uuid'
+
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+
 
 import { RootState } from "../configureStore"
 
@@ -44,8 +40,10 @@ export const filterSlice = createSlice({
     },
     setSearchValue(state, { payload }: PayloadAction<string>){
       state.searchValue = payload
+      state.page = 0
     },
     setTabValue(state, { payload }: PayloadAction<TabValue>){
+      state.page = 0
       state.tabValue = payload
     },
     setTagsValue(state, { payload }: PayloadAction<string[]>){

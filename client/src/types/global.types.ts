@@ -7,3 +7,4 @@ export interface BaseInitState<T> {
 export interface BaseError {
    message: string
 }
+

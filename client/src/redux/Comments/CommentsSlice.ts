@@ -1,4 +1,5 @@
 import { $AuthApi } from "@/http/axios.http"
+import { commentService } from "@/service/CommentService/CommentService"
 import { Action, AnyAction, createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import axios from "axios"
 import { AuthFormDefaultValues } from "../../components/Common/Form/AuthForm/types"
@@ -38,13 +39,7 @@ const initialState: BaseInitState<InitialStateComments> = {
 export const getCommentsThunk = createAsyncThunk<Comment[], undefined, {rejectValue: string }>('comments/get', async (_ = undefined, { dispatch, rejectWithValue }) => {
     try {
 
-      let url = `${process.env.REACT_APP_API_URL}/comment`
-
-      const request = await axios.get(url, {
-         headers: {
-            'Authorization': `Bearer ${LocalStorageService.get(LocalStorageKeys.TOKEN)}`
-          }
-      })
+      const request = await commentService.getAllComments()
       const response = await request.data
 
 
@@ -60,10 +55,9 @@ export const getCommentsThunk = createAsyncThunk<Comment[], undefined, {rejectVa
 
 export const getCommentsByPostIdThunk = createAsyncThunk<Comment[], string, {rejectValue: string }>('comments/get', async (postId, { dispatch, rejectWithValue }) => {
   try {
+ 
 
-    let url = `${process.env.REACT_APP_API_URL}/comment/${postId}`
-
-    const request = await $AuthApi.get(url)
+    const request = await commentService.getCommentById(postId)
     const response = await request.data
 
     return response
@@ -79,7 +73,6 @@ export const getCommentsByPostIdThunk = createAsyncThunk<Comment[], string, {rej
 export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {rejectValue: string }>('comment/create', async (comment, { dispatch, rejectWithValue }) => {
   try {
 
-    let url = `${process.env.REACT_APP_API_URL}/comment`
 
     const formData = new FormData()
 
@@ -87,7 +80,7 @@ export const createCommentThunk = createAsyncThunk<Comment, CommentBody, {reject
       formData.append(name, value)
     })
 
-    const request = await $AuthApi.post(url, formData)
+    const request = await commentService.createComment(formData)
     const response = await request.data
     dispatch(setToast({title: 'Comment was created! ^^', status: 'success'}))
 

@@ -11,6 +11,7 @@ import axios from 'axios'
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
+import { useHistory, useLocation } from 'react-router-dom'
 
 interface JoinProps {
 
@@ -33,7 +34,7 @@ export const Join: React.FC<JoinProps> = () => {
       }
    }} = useSelector(selectUser)
 
-
+   const { push } = useHistory()
    const { rooms } = useSelector(selectChat)
 
    const [toggleAnchorValue, setToggleAnchorValue] = React.useState<StateAnchor>({
@@ -148,6 +149,10 @@ export const Join: React.FC<JoinProps> = () => {
                   <Grid item xs={12}>
                      <Button type='submit' variant="contained" fullWidth>Join</Button>
                   </Grid>
+                  <Grid item xs={12}>
+                     <Button variant="contained" fullWidth onClick={() => push('/home')}>Exit</Button>
+                  </Grid>
+                  
                </Grid>
             </FormControl>
            

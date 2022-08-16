@@ -5,7 +5,8 @@ import { LocalStorageKeys, LocalStorageService } from "@service/LocalStorageServ
 import { BaseError, BaseInitState } from "@typesModule/global.types"
 import { setToast } from "@redux/Toast"
 import { RootState } from "@redux/configureStore"
-import { $AuthApi } from "@/http/axios.http"
+import { $AuthApi, $BaseApi } from "@/http/axios.http"
+import { userService } from "@/service/UserService/UserService"
 
 interface InitialStateUser {
   isAuth: boolean
@@ -36,51 +37,52 @@ const initialState: BaseInitState<InitialStateUser> & { isFetchingAuth: boolean 
 
 export const loginThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, { rejectValue: string}>('user/login', async (user, { dispatch, rejectWithValue }) => {
     try {
-      const request = await axios.post(`${process.env.REACT_APP_API_URL}/login`, user)
+      const request = await $BaseApi.post(`/login`, user)
       const response:InitialStateUser = await request.data
 
       dispatch(setToast({title: `Hello, ${response.user.firstname} ${response.user.lastname}`, status: 'success'}))
 
       return response
-    } catch (err) {
-      let error: BaseError = {
-        message: 'Error'
-      }
+    } catch (err: any) {
+      console.log('err', err)
 
-      if(err && typeof err === 'object') error = err as BaseError
+      let error: string = 'Error'
+    
+      if(typeof err === 'string') error = err
+      
 
-      dispatch(setToast({title: error.message, status: 'error'}))
+      dispatch(setToast({title: err?.response?.data?.message ?? error, status: 'error'}))
 
-      return rejectWithValue(error.message)
+      return rejectWithValue(error)
     }
 })
 
 export const registerThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>, AuthFormDefaultValues, {rejectValue: string}>('user/register', async (user, { dispatch, rejectWithValue }) => {
   try {
 
-    const request = await axios.post(`${process.env.REACT_APP_API_URL}/register`, user)
+    const request = await $BaseApi.post(`/register`, user)
     const response: InitialStateUser = await request.data
 
     dispatch(setToast({title: `Hello, ${response.user.email}`, status: 'success'}))
 
     return response
-  } catch (err) {
+  } catch (err: any) {
 
-    let error: BaseError = {
-      message: 'Error'
-    }
+    let error: string = 'Error'
 
-    if(err && typeof err === 'object') error = err as BaseError
-    dispatch(setToast({title: error.message, status: 'error'}))
+    if(typeof err === 'string') error = err
 
-    return rejectWithValue(error.message)
+    dispatch(setToast({title: err?.response?.data?.message ?? error, status: 'error'}))
+
+
+    return rejectWithValue(error)
   }
 })
 
-export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user'], string, {rejectValue: string }>('login/user', async (token, { dispatch, rejectWithValue }) => {
+export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user'], undefined, {rejectValue: string }>('login/user', async (_, { dispatch, rejectWithValue }) => {
   try {
 
-    const request = await $AuthApi.get(`${process.env.REACT_APP_API_URL}/user`)
+    const request = await userService.getUser()
 
     const response = await request.data
 
@@ -91,10 +93,10 @@ export const userThunk = createAsyncThunk<Omit<InitialStateUser, 'isAuth'>['user
   } catch (err: any) {
 
     let error: string = 'Error'
-
-    if(typeof err === 'string') error = err
     
-    dispatch(setToast({title: err.response?.data?.message || error, status: 'error'}))
+    if(typeof err === 'string') error = err
+
+    dispatch(setToast({title: error, status: 'error'}))
     
     LocalStorageService.delete(LocalStorageKeys.TOKEN)
     LocalStorageService.delete(LocalStorageKeys.USER)

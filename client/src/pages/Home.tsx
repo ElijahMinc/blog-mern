@@ -83,13 +83,11 @@ export const Home: React.FC = () => {
    const dispatch = useDispatch()
    
    const handleChange = (_: React.SyntheticEvent, newValue: TabValue) => {
-      dispatch(setPage(1))
       dispatch(setTabValue(newValue))
    }
 
   const debounce = useDebounce((value) => {
-      dispatch(setPage(1))
-      dispatch(setSearchValue(value))
+      dispatch(setSearchValue(value!))
    }, 600)
 
    return  (

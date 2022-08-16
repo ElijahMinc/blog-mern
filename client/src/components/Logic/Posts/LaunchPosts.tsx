@@ -4,6 +4,8 @@ import { AppDispatch } from '@redux/configureStore'
 import { getPostThunk, Post, selectIsAllFetching, selectPost } from '@redux/Post/PostSlice'
 import { Loader } from '@Common/Loader/Loader'
 import { selectFilter, TabValue } from '@/redux'
+import { QueryParams } from '@/types/queryParams'
+import { postService } from '@/service/PostService/PostService'
 
 interface LaunchPostsProps {
    tabValue: TabValue
@@ -28,26 +30,22 @@ export const LaunchPosts: React.FC<LaunchPostsProps> = ({ tabValue, allPosts, ch
    const dispatch = useDispatch<AppDispatch>()
 
    useEffect(() => {
-      const postThunkParameters: {
-         id?: string
-         typeTab: TabValue,
-         page?: number,
-         searchValue?: string,
-         tags?: string[]
-      } = {
+      const queryParams: QueryParams = {
+         id,
          typeTab: tabValue,
          page,
          searchValue,
          tags
       }
 
-      if(tabValue === TabValue.CHOSEN_POST && !allPosts){
-         postThunkParameters.id = id
+      dispatch(getPostThunk(queryParams))
+      
+
+      return () => {
+         postService.abortRequest()
       }
-
-      dispatch(getPostThunk(postThunkParameters))
-
    }, [page, searchValue, tags])
+
 
    return isAllFetching ?  <Loader/> : children((posts as Post[]))   
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import Drawer from '@mui/material/Drawer';
 import { Box } from '@mui/system';
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
@@ -19,11 +19,6 @@ interface DrawerProps {
 }
 
 export const ThemedDrawer: React.FC<DrawerProps> = ({ state, anchor,  rooms = [], toggleDrawer, handleGetRoom }) => {
-
-
-  // useEffect(() => {
-  //   setState({ ...state, [anchor]: isShow })
-  // }, [isShow])
 
    return (
       <Drawer
